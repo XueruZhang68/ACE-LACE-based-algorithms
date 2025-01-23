@@ -7,7 +7,7 @@ This repository hosts the R code that implements ACE/LACE-based algorithms and r
   - A1
   - A2
   - A3
--  LACE/: R code of Algorithms 1<sub>L</sub>-3<sub>L</sub>
+- LACE/: R code of Algorithms 1<sub>L</sub>-3<sub>L</sub>
   - A1<sub>L</sub>
   - A2<sub>L</sub>
   - A3<sub>L</sub>
