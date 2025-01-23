@@ -6,7 +6,7 @@ This repository hosts the R code that implements ACE/LACE-based algorithms and r
   - A0
   - A1
   - A2
-  - A0
+  - A3
 -  LACE/: R code of Algorithms 1<sub>L</sub>-3<sub>L</sub> 
 - results/: storing all numberical results
 - figures/: R code for produing Figure 1-2 in the paper and Figure S1-S9 the supplementary material
