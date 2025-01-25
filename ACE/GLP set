@@ -1,1 +1,24 @@
-
+SA_naive_combined<-function(N,S,T,p,total,r,nn,column_optimal){
+  if (S<N*length(Euler(N))){
+    D=construction(N)
+    value_optimal=L_2(D[,column_optimal],p)/floor((N/2)^{p-1}*(N+1)*S/3)
+    for (i in nn:(total)){
+      remaining_cloum=c(1:(N*length(Euler(N))))[-column_optimal]
+      try_column=remaining_cloum[sample(length(remaining_cloum),1,replace=FALSE)]
+      column_try=column_optimal
+      column_try[sample(length(column_optimal),1,replace=FALSE)]= try_column
+      value_try=L_2(D[,column_try],p)/floor((N/2)^{p-1}*(N+1)*S/3)
+      if (value_try>value_optimal){
+        column_optimal=column_try
+      }else{
+        if(exp((value_try-value_optimal)/T)>runif(1,0,1)){
+          column_optimal=column_try
+        }
+      }
+      T=r*T
+    }
+    return(D[,column_optimal])
+  }else{
+    return(construction(N))
+  }
+}
