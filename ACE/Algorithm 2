@@ -1,0 +1,136 @@
+SA_half_ACE_combined<-function(N,S,T,p,total,r,step,delta){
+  m=floor(2*S/length(Euler(N)))
+  K=S%%(length(Euler(N))/2)
+  D=GLP(N,Euler(N)[1:(length(Euler(N))/2)])
+  D1=GLP(N,Euler(N)[-(1:(length(Euler(N))/2))])
+  U_0=1:N
+  value=1:step
+  iiii=0
+  if (m<N){
+    U_optimal=sample(1:N,m,replace=FALSE)#initial U
+    column_optimal=sample(1:((N-m)*length(Euler(N))/2),K,replace=FALSE)#position of 
+    #K-column 
+    value_optimal=L_2(cbind(level_com(D,U_optimal-1),level_com(D,U_0[-U_optimal]-1)[,
+    column_optimal]),p)/floor((N+1)*S/3*(N/2)^{p-1})
+    U_try=U_optimal
+    while(var(value)>delta && iiii<=total){
+      U_try[sample(length(U_optimal),1)]=U_0[-U_optimal][sample(length(U_0[-U_optimal
+      ]),1)]
+      column_try=sample(1:((N-m)*length(Euler(N))/2),K,replace=FALSE)
+      value_try=L_2(cbind(level_com(D,U_try-1),level_com(D,U_0[-U_try]-1)[,column_try
+      ]),p)
+      /floor((N+1)*S/3*(N/2)^{p-1})
+      if (value_try> value_optimal){
+        column_optimal=column_try
+        U_optimal=U_try
+        value_optimal=value_try
+      }else{
+        if(exp((value_try-value_optimal)/T)>runif(1,0,1)){
+          column_optimal=column_try
+          U_optimal=U_try
+          value_optimal=value_try
+        }
+      }
+      value=c(value[2:step],value_optimal)
+      T=r*T
+      iiii=iiii+1
+      Target=cbind(level_com(D,U_optimal-1),level_com(D,U_0[-U_optimal]-1)[,
+      column_optimal])
+    }
+    if(iiii<total){
+      aaa=sapply(1:m,function(x){((U_optimal[x]-1)*(length(Euler(N))/2)+1):((
+      U_optimal[x])*(length(Euler(N))/2))})
+      if (length(column_optimal)>0){
+        hhhhh=sapply(1:length(column_optimal),function(x){column_optimal[x]-floor(2*
+        column_optimal[x]/length(Euler(N)))*length(Euler(N))/2+(U_0[-U_optimal][
+        ceiling(2*column_optimal[x]/length(Euler(N)))]-1)*length(Euler(N))/2})
+      }else{
+        hhhhh=NULL
+      }
+      column_optimal=c(as.vector(aaa),hhhhh)
+      Target=SA_half_naive_combined(N,S,T,p,total,r,iiii+1,column_optimal)
+    }
+    return(Target)
+  }
+  if (m==N && K==0){
+    return(level_com(D,1:N-1))
+  }
+  if (S<((N+1)*length(Euler(N))/2)&& S>(N*length(Euler(N))/2)){
+    column_optimal=sample(1:(N*length(Euler(N))/2),K,replace=FALSE)#position of 
+    #K-column 
+    value_optimal=L_2(cbind(level_com(D1,U_0-1),level_com(D,U_0-1)[,column_optimal]),p)
+    /floor((N/2)^{p-1}*(N+1)*S/3)
+    while(var(value)>delta && iiii<=total){
+      column_try=sample(1:(N*length(Euler(N))/2),K,replace=FALSE)
+      value_try=L_2(cbind(level_com(D1,U_0-1),level_com(D,U_0-1)[,column_try]),p)/
+      floor((N/2)^{p-1}*(N+1)*S/3)
+      if (value_try> value_optimal){
+        column_optimal=column_try
+        value_optimal=value_try
+      }else{
+        if(exp((value_try-value_optimal)/T)>runif(1,0,1)){
+          column_optimal=column_try
+          value_optimal=value_try
+        }
+      }
+      T=r*T
+      value=c(value[2:step],value_optimal)
+      T=r*T
+      iiii=iiii+1
+      Target=cbind(level_com(D1,U_0-1),level_com(D,U_0-1)[,column_optimal])
+    }
+    if(iiii<total){
+      Target=SA_half_naive_combined(N,S,T,p,total,r,iiii+1,column_optimal)}
+    return(Target)
+  }
+  
+  if (m>N  && S<(N*length(Euler(N)))){
+    U_optimal=sample(1:N,m-N,replace=FALSE)#initial U
+    column_optimal=sample(1:((2*N-m)*length(Euler(N))/2),K,replace=FALSE)#position of 
+    #K-column 
+    value_optimal=L_2(cbind(level_com(D1,U_0-1),level_com(D,U_optimal-1),level_com(D,
+    U_0[-U_optimal]-1)[,column_optimal]),p)/floor((N/2)^{p-1}*(N+1)*S/3)
+    U_try=U_optimal
+    while(var(value)>delta && iiii<=total){
+      U_try[sample(length(U_optimal),1)]=U_0[-U_optimal][sample(length(U_0[-U_optimal])
+      ,1)]
+      column_try=sample(1:((2*N-m)*length(Euler(N))/2),K,replace=FALSE)
+      value_try=L_2(cbind(level_com(D1,U_0-1),level_com(D,U_try-1),level_com(D,U_0[-
+      U_try]-1)[,column_try]),p)/floor((N/2)^{p-1}*(N+1)*S/3)
+      if (value_try> value_optimal){
+        column_optimal=column_try
+        U_optimal=U_try
+        value_optimal=value_try
+      }else{
+        if(exp((value_try-value_optimal)/T)>runif(1,0,1)){
+          column_optimal=column_try
+          U_optimal=U_try
+          value_optimal=value_try
+        }
+      }
+      T=r*T
+      value=c(value[2:step],value_optimal)
+      T=r*T
+      iiii=iiii+1
+      Target=cbind(level_com(D1,U_0-1),level_com(D,U_optimal-1),level_com(D,U_0[-
+      U_optimal]-1)[,column_optimal])
+    }
+    if(iiii<total){
+      aaa=sapply(1:(m-N),function(x){((U_optimal[x]-1)*(length(Euler(N))/2)+1):((
+      U_optimal[x])*(length(Euler(N))/2))})
+      if (length(column_optimal)>0){
+        hhhhh=sapply(1:length(column_optimal),function(x){column_optimal[x]-floor(2*
+        column_optimal[x]/length(Euler(N)))*length(Euler(N))/2+(U_0[-U_optimal][
+        ceiling(2*column_optimal[x]/length(Euler(N)))]-1)*length(Euler(N))/2})
+      }else{
+        hhhhh=NULL
+      }
+      column_optimal=c(as.vector(aaa),hhhhh)
+      Target=SA_half_naive_combined(N,S,T,p,total,r,iiii+1,column_optimal)
+    }
+    return(Target)
+  }
+  if (S==N*length(Euler(N))){
+    return(level_com(GLP(N,Euler(N)),1:N-1))
+  }
+}
