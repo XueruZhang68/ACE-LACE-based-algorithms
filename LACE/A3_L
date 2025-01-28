@@ -1,1 +1,61 @@
 
+SA_leave_one_out_mixed_ACE_combined<-function(N,S,T,p,total,r,step,delta){
+  if (S<N*length(Euler(N))){
+    m=floor(2*S/length(Euler(N)))
+    K=S%%(length(Euler(N))/2)
+    D=construction_leave_one_out(N)
+    U_optimal=sample(1:(2*N),m,replace=FALSE)#####step 2 initial U
+    U_0=1:(2*N)
+    U00=1:(N*length(Euler(N)))
+    column_optimal=sample(1:((2*N-m)*length(Euler(N))/2),K,replace=FALSE)#step 2 
+    #position of K-column 
+    aaa=sapply(1:m,function(x){((U_optimal[x]-1)*(length(Euler(N))/2)+1):((U_optimal[x]
+    )*(length(Euler(N))/2))})
+    value_optimal=L_2(D[,c(as.vector(aaa),U00[-as.vector(aaa)][column_optimal])],p)/
+    floor(((N-1)/2)^{p-1}*N*S/3)
+    U_try=U_optimal
+    iiii=0
+    value=1:step
+    while(var(value)>delta && iiii<=total){
+      U_try[sample(length(U_optimal),1)]=U_0[-U_optimal][sample(length(U_0[-U_optimal]
+      ),1)]
+      column_try=sample(1:((2*N-m)*length(Euler(N))/2),K,replace=FALSE)
+      aaa=sapply(1:m,function(x){((U_try[x]-1)*(
+      length(Euler(N))/2)+1):((U_try[x])*(length(Euler(N))/2))})
+      value_try=L_2(D[,c(as.vector(aaa),U00[-as.vector(aaa)][column_try])],p)/floor(
+      ((N-1)/2)^{p-1}*N*S/3)
+      if (value_try> value_optimal){
+        column_optimal=column_try
+        U_optimal=U_try
+        value_optimal=value_try
+        
+      }else{
+        if(exp((value_try-value_optimal)/T)>runif(1,0,1)){
+          column_optimal=column_try
+          U_optimal=U_try
+          value_optimal=value_try
+        }
+      }
+      value=c(value[2:step],value_optimal)
+      T=r*T
+      iiii=iiii+1
+      aaa=sapply(1:m,function(x){((U_optimal[x]-1)*(length(Euler(N))/2)+1):((
+      U_optimal[x])*(length(Euler(N))/2))})
+      Target=D[,c(as.vector(aaa),U00[-as.vector(aaa)][column_optimal])]
+    }
+    if(iiii<total){
+      if (length(column_optimal)>0){
+        hhhhh=sapply(1:length(column_optimal),function(x){column_optimal[x]-floor(2*
+        column_optimal[x]/length(Euler(N)))*length(Euler(N))/2+(U_0[-U_optimal][
+        ceiling(2*column_optimal[x]/length(Euler(N)))]-1)*length(Euler(N))/2})
+      }else{
+        hhhhh=NULL
+      }
+      column_optimal=c(as.vector(aaa),hhhhh)
+      Target=SA_leave_one_out_naive_combined(N,S,T,p,total,r,iiii+1,column_optimal)
+    }
+    return(Target)
+  }else{
+    return(construction_leave_one_out(N))
+  }
+}
