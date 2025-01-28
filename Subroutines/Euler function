@@ -1,0 +1,9 @@
+Euler<-function(N){
+  t=NULL
+  for (j in 1:(N-1)){
+    if (gcd(j,N)==1){
+      t=c(t,j)
+    }
+  }
+  return(t) 
+}
