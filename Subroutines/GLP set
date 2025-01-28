@@ -1,1 +1,8 @@
 
+GLP<-function(N,hm){
+  h=c(1:N)
+  udt=h%*%t(hm)
+  ind0=which(udt==0)
+  udt[ind0]=N
+  return(udt)
+}
