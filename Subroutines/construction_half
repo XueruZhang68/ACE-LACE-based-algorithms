@@ -1,0 +1,11 @@
+#Additive column expansion with half of maximum columns
+construction_half<-function(SetN){
+  D1=NULL
+  aa=Euler(SetN);
+  aa=aa[1:(length(aa)/2)];
+  D=GLP(SetN,aa)
+  for (j in 0:(SetN-1))
+  {
+    D1=cbind(D1,level(D,j))}
+  return(D1)
+}
