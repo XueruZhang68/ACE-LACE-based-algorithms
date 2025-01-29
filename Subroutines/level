@@ -1,3 +1,4 @@
+#Level permutation
 level<-function(D,l){
   y=(D+l)%%nrow(D)
   ind0=which(y==0)
