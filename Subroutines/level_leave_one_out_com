@@ -1,3 +1,4 @@
+#Leave-one-out additive column expansion
 level_leave_one_out_com<-function(D,com){
   D1=NULL
   for (j in 1:length(com))
