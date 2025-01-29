@@ -1,0 +1,6 @@
+level<-function(D,l){
+  y=(D+l)%%nrow(D)
+  ind0=which(y==0)
+  y[ind0]=nrow(D)
+  return(y)
+}
