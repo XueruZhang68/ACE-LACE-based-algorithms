@@ -1,3 +1,4 @@
+#L_p-distance
 L_2<-function(D,p){
   tttttt=t(combn(1:dim(D)[1],2))
   L_1=exp(1000)
