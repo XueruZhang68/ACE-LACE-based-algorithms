@@ -1,3 +1,4 @@
+#Euler function
 Euler<-function(N){
   t=NULL
   for (j in 1:(N-1)){
