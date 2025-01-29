@@ -1,3 +1,4 @@
+#Leave_one_out additive column expansion with maximum columns
 construction_leave_one_out<-function(SetN)
 {
   D1=NULL
