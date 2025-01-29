@@ -1,3 +1,4 @@
+#Column-orthogonality
 Coff<-function(D){
   y=sum(sum((cor(D)-diag(ncol(D)))^2))/(ncol(D)*(ncol(D)-1))
   #y=(cor(D)-diag(ncol(D)))^2
