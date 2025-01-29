@@ -1,0 +1,11 @@
+construction<-function(SetN)
+{
+  D1=NULL
+  aa=Euler(SetN);
+  aa=aa[1:(length(aa))];
+  D=GLP(SetN,aa)
+  for (j in 0:(SetN-1))
+  {
+    D1=cbind(D1,level(D,j))}
+  return(D1)
+}
