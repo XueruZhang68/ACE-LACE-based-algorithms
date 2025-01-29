@@ -1,0 +1,7 @@
+level_com<-function(D,com){
+  y=NULL
+  for (i in 1:length(com)){
+    y=cbind(y,level(D,com[i]))
+  }
+  return(y)
+}
