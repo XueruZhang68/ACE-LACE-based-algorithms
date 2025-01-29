@@ -1,0 +1,15 @@
+#Leave_one_out additive column expansion with half of maximum columns
+construction_leave_one_out_half<-function(SetN)
+{
+  D1=NULL
+  aa=Euler(SetN);
+  aa=aa[1:(length(aa)/2)];
+  D=GLP(SetN,aa)
+  for (j in 0:(SetN-1))
+  {
+    D1=cbind(D1,level(D,j))
+    D1[D1==SetN]=j
+  }
+  D1=D1[-SetN,]
+  return(D1)
+}
