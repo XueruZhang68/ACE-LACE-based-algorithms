@@ -1,3 +1,4 @@
+#Additive column expansion with maximum columns
 construction<-function(SetN)
 {
   D1=NULL
