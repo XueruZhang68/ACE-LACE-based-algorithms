@@ -1,0 +1,17 @@
+L_2<-function(D,p){
+  tttttt=t(combn(1:dim(D)[1],2))
+  L_1=exp(1000)
+  tttttt1=NULL
+  tttttt2=NULL
+  for (i in 1:dim(tttttt)[1]){
+    L_1_0=0;
+    tttttt1=tttttt[i,]
+    tttttt2=D[tttttt1[1],]-D[tttttt1[2],]
+    for (j in 1:dim(D)[2]){
+      L_1_0=L_1_0+abs(tttttt2[j])^p
+    }
+    if (L_1_0<L_1){
+      L_1=L_1_0}
+  }
+  return(L_1)
+}
