@@ -1,0 +1,10 @@
+level_leave_one_out_com<-function(D,com){
+  D1=NULL
+  for (j in 1:length(com))
+  {
+    D1=cbind(D1,level(D,com[j]))
+    D1[D1==dim(D)[1]]=com[j]
+  }
+  D1=D1[-dim(D)[1],]
+  return(D1)
+}
