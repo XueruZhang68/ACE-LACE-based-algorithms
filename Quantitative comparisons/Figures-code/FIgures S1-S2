@@ -122,7 +122,6 @@ Recom_leave_one_out_total1000=list(Recom_leave_one_out_naive,
                                    Recom_leave_one_out_SLHD,
                                    Recom_leave_one_out_lhd)
 
-save.image("LACE6.RData")
 
 
 #####Figure S1############################################################
