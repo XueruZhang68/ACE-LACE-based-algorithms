@@ -1,0 +1,10 @@
+UNI_PRO<-function(D)
+{
+  k=dim(D)[2]
+  n=dim(D)[1]
+  g=sum(sapply(1:n,function(x){X2=rep(1,n)%*%t(D[x,]);return(sum((apply((abs(D-X2)),1,sum))^2))}))-2*sum(sapply(1:n,function(x){X2=rep(1,n)%*%t(D[x,]);return(sum(apply((abs(D-X2)),1,sum))^2)}))/n
+  cc=(4*(5*k-2)*n^4+30*(3*k-5)*n^2+15*k+33)/(720*(k-1)*n^4)+(1+(-1)^n)/(64*n^4)
+  result=g/(4*n^4*k*(k-1))+cc
+  return(result)
+}
+
