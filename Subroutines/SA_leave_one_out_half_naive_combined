@@ -1,0 +1,45 @@
+SA_leave_one_out_half_naive_combined<-function(N,S,T,p,total,r,nn,column_optimal){
+  D=level_leave_one_out_com(GLP(N,Euler(N)),1:((N+1)/2)-1)
+  if (S<((N+1)*length(Euler(N))/2)){
+    value_optimal=L_2(D[,column_optimal],p)/floor(((N-1)/2)^{p-1}*N*S/3)
+    for (i in nn:(total)){
+      remaining_cloum=c(1:((N+1)*length(Euler(N))/2))[-column_optimal]
+      try_column=remaining_cloum[sample(length(remaining_cloum),1,replace=FALSE)]
+      column_try=column_optimal
+      column_try[sample(length(column_optimal),1,replace=FALSE)]= try_column
+      value_try=L_2(D[,column_try],p)/floor(((N-1)/2)^{p-1}*N*S/3)
+      if (value_try>value_optimal){
+        column_optimal=column_try
+        value_optimal=value_try
+      }else{
+        if( exp((value_try-value_optimal)/T)>runif(1,0,1)){
+          column_optimal=column_try
+          value_optimal=value_try
+        }
+      }
+      T=r*T
+    }
+    return(D[,column_optimal])
+  }else{
+    D1=level_leave_one_out_com(GLP(N,Euler(N)),((N+1)/2):(N-1))
+    value_optimal=L_2(cbind(D,D1[,column_optimal]),p)/floor(((N-1)/2)^{p-1}*N*S/3)
+    for (i in nn:(total)){
+      remaining_cloum=c(1:((N-1)*length(Euler(N))/2))[-column_optimal]
+      try_column=remaining_cloum[sample(length(remaining_cloum),1,replace=FALSE)]
+      column_try=column_optimal
+      column_try[sample(length(column_optimal),1,replace=FALSE)]= try_column
+      value_try=L_2(cbind(D,D1[,column_try]),p)/floor(((N-1)/2)^{p-1}*N*S/3)
+      if (value_try>value_optimal){
+        column_optimal=column_try
+        value_optimal=value_try
+      }else{
+        if( exp((value_try-value_optimal)/T)>runif(1,0,1)){
+          column_optimal=column_try
+          value_optimal=value_try
+        }
+      }
+      T=r*T
+    }
+    return(cbind(D,D1[,column_optimal]))
+  }
+}
