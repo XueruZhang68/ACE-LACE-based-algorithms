@@ -122,7 +122,6 @@ Recom_total000=list(Recom_naive,
                     Recom_mixed_ACE,
                     Recom_SLHD,
                     Recom_lhd)
-save.image("ACE7.RData")
 
 
 #################Figure 1################################################
