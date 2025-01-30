@@ -1,1 +1,106 @@
 
+library(SLHD)
+library(lhs)
+library(MaxPro)
+#######n=50
+ntotal=20
+N=61
+Col=c(30,50)
+T=1
+total=200
+r=0.95
+step=10
+delta=0.01^2
+NNNN=36
+Recom_leave_one_out_naive=matrix(0,6,length(Col))
+Recom_leave_one_out_ACE=matrix(0,6,length(Col))
+Recom_leave_one_out_mixed_ACE=matrix(0,6,length(Col))
+Recom_leave_one_out_half_ACE=matrix(0,6,length(Col))
+Recom_leave_one_out_lhd=matrix(0,6,length(Col))
+Recom_leave_one_out_rho_LB=sapply(Col, FUN=function(x){return(LB_rho(N-1,x))})
+Recom_leave_one_out_phi_LB=sapply(Col, FUN=function(x){return(LB_phi(N-1,x))})
+final.out.put_naive=mclapply(Col, FUN=function(x){D1=SA_leave_one_out_naive(N,x,T,1,total,r);D2=SA_leave_one_out_naive(N,x,T,2,total,r);return(c(L_2(D1,1),L_2(D2,2),Coff(D2),UNI_PRO(D1),phi_p(D1,1),MaxProMeasure(D1,p_nom=0)))}, mc.cores = NNNN)
+Recom_leave_one_out_naive=Recom_leave_one_out_naive+sapply(1:length(Col),function(x){final.out.put_naive[[x]]})
+
+final.out.put_ACE=mclapply(Col, FUN=function(x){D1=SA_leave_one_out_ACE_combined(N,x,T,1,total,r,step,delta);D2=SA_leave_one_out_ACE_combined(N,x,T,2,total,r,step,delta);return(c(L_2(D1,1),L_2(D2,2),Coff(D2),UNI_PRO(D1),phi_p(D1,1),MaxProMeasure(D1,p_nom=0)))}, mc.cores = NNNN)
+Recom_leave_one_out_ACE=Recom_leave_one_out_ACE+sapply(1:length(Col),function(x){final.out.put_ACE[[x]]})
+
+final.out.put_half_ACE=mclapply(Col, FUN=function(x){D1=SA_leave_one_out_half_ACE_combined(N,x,T,1,total,r,step,delta);D2=SA_leave_one_out_half_ACE_combined(N,x,T,2,total,r,step,delta);return(c(L_2(D1,1),L_2(D2,2),Coff(D2),UNI_PRO(D1),phi_p(D1,1),MaxProMeasure(D1,p_nom=0)))}, mc.cores = NNNN)
+Recom_leave_one_out_half_ACE=Recom_leave_one_out_half_ACE+sapply(1:length(Col),function(x){final.out.put_half_ACE[[x]]})
+
+final.out.put_mixed_ACE=mclapply(Col, FUN=function(x){D1=SA_leave_one_out_mixed_ACE_combined(N,x,T,1,total,r,step,delta);D2=SA_leave_one_out_mixed_ACE_combined(N,x,T,2,total,r,step,delta);return(c(L_2(D1,1),L_2(D2,2),Coff(D2),UNI_PRO(D1),phi_p(D1,1),MaxProMeasure(D1,p_nom=0)))}, mc.cores = NNNN)
+Recom_leave_one_out_mixed_ACE=Recom_leave_one_out_mixed_ACE+sapply(1:length(Col),function(x){final.out.put_mixed_ACE[[x]]})
+
+Recom_leave_one_out_SLHD=matrix(0,6,length(Col))
+final.out.put_SLHD=mclapply(Col, FUN=function(x){D=maximinSLHD(1, N-1, x, power = 15, nstarts = 1, itermax = 1, total_iter =total)$Design;return(c(L_2(D,1),L_2(D,2),Coff(D),UNI_PRO(D),phi_p(D,1),MaxProMeasure(D,p_nom=0)))}, mc.cores =NNNN)
+Recom_leave_one_out_SLHD=Recom_leave_one_out_SLHD+sapply(1:length(Col),function(x){final.out.put_SLHD[[x]]})
+
+#50
+table=t(cbind(Recom_leave_one_out_naive[,1],Recom_leave_one_out_ACE[,1],Recom_leave_one_out_half_ACE[,1],Recom_leave_one_out_mixed_ACE[,1],Recom_leave_one_out_SLHD[,1]))
+table[,1]=table[,1]/floor(N*Col[1]/3)
+table[,2]=table[,2]/floor(N*Col[1]*(N-1)/6)
+table[,3]=Recom_leave_one_out_rho_LB[1]/table[,3]
+table[,4]=Recom_leave_one_out_phi_LB[1]/table[,4]
+table[,5]=(N-1)*(N-2)/2/(N*Col[1]/3)/table[,5]
+table[,6]=1/table[,6]
+table=round(table,3)
+
+#60
+table=t(cbind(Recom_leave_one_out_naive[,2],Recom_leave_one_out_ACE[,2],Recom_leave_one_out_half_ACE[,2],Recom_leave_one_out_mixed_ACE[,2],Recom_leave_one_out_SLHD[,2]))
+table[,1]=table[,1]/floor(N*Col[2]/3)
+table[,2]=table[,2]/floor(N*Col[2]*(N-1)/6)
+table[,3]=Recom_leave_one_out_rho_LB[2]/table[,3]
+table[,4]=Recom_leave_one_out_phi_LB[2]/table[,4]
+table[,5]=(N-1)*(N-2)/2/(N*Col[2]/3)/table[,5]
+table[,6]=1/table[,6]
+table=round(table,3)
+
+
+
+
+
+library(SLHD)
+library(lhs)
+library(MaxPro)
+ntotal=20
+N=101
+Col=c(100,1000)
+T=1
+total=200
+r=0.95
+step=10
+delta=0.01^2
+NNNN=36
+Recom_leave_one_out_naive=matrix(0,6,length(Col))
+Recom_leave_one_out_ACE=matrix(0,6,length(Col))
+Recom_leave_one_out_mixed_ACE=matrix(0,6,length(Col))
+Recom_leave_one_out_half_ACE=matrix(0,6,length(Col))
+Recom_leave_one_out_SLHD=matrix(0,6,length(Col))
+Recom_leave_one_out_lhd=matrix(0,6,length(Col))
+Recom_leave_one_out_rho_LB=sapply(Col, FUN=function(x){return(LB_rho(N-1,x))})
+Recom_leave_one_out_phi_LB=sapply(Col, FUN=function(x){return(LB_phi(N-1,x))})
+final.out.put_naive=mclapply(Col, FUN=function(x){D1=SA_leave_one_out_naive(N,x,T,1,total,r);D2=SA_leave_one_out_naive(N,x,T,2,total,r);return(c(L_2(D1,1),L_2(D2,2),Coff(D2),UNI_PRO(D1),phi_p(D1,1),MaxProMeasure(D1,p_nom=0)))}, mc.cores = NNNN)
+  Recom_leave_one_out_naive=Recom_leave_one_out_naive+sapply(1:length(Col),function(x){final.out.put_naive[[x]]})
+  
+  final.out.put_ACE=mclapply(Col, FUN=function(x){D1=SA_leave_one_out_ACE_combined(N,x,T,1,total,r,step,delta);D2=SA_leave_one_out_ACE_combined(N,x,T,2,total,r,step,delta);return(c(L_2(D1,1),L_2(D2,2),Coff(D2),UNI_PRO(D1),phi_p(D1,1),MaxProMeasure(D1,p_nom=0)))}, mc.cores = NNNN)
+  Recom_leave_one_out_ACE=Recom_leave_one_out_ACE+sapply(1:length(Col),function(x){final.out.put_ACE[[x]]})
+  
+  final.out.put_half_ACE=mclapply(Col, FUN=function(x){D1=SA_leave_one_out_half_ACE_combined(N,x,T,1,total,r,step,delta);D2=SA_leave_one_out_half_ACE_combined(N,x,T,2,total,r,step,delta);return(c(L_2(D1,1),L_2(D2,2),Coff(D2),UNI_PRO(D1),phi_p(D1,1),MaxProMeasure(D1,p_nom=0)))}, mc.cores = NNNN)
+  Recom_leave_one_out_half_ACE=Recom_leave_one_out_half_ACE+sapply(1:length(Col),function(x){final.out.put_half_ACE[[x]]})
+  
+  final.out.put_mixed_ACE=mclapply(Col, FUN=function(x){D1=SA_leave_one_out_mixed_ACE_combined(N,x,T,1,total,r,step,delta);D2=SA_leave_one_out_mixed_ACE_combined(N,x,T,2,total,r,step,delta);return(c(L_2(D1,1),L_2(D2,2),Coff(D2),UNI_PRO(D1),phi_p(D1,1),MaxProMeasure(D1,p_nom=0)))}, mc.cores = NNNN)
+  Recom_leave_one_out_mixed_ACE=Recom_leave_one_out_mixed_ACE+sapply(1:length(Col),function(x){final.out.put_mixed_ACE[[x]]})
+  
+  final.out.put_SLHD=mclapply(Col, FUN=function(x){D=maximinSLHD(1, N-1, x, power = 15, nstarts = 1, itermax = 1, total_iter =total)$Design;return(c(L_2(D,1),L_2(D,2),Coff(D),UNI_PRO(D),phi_p(D,1),MaxProMeasure(D,p_nom=0)))}, mc.cores =NNNN)
+  Recom_leave_one_out_SLHD=Recom_leave_one_out_SLHD+sapply(1:length(Col),function(x){final.out.put_SLHD[[x]]})
+  
+save.image("~/LHD_Table4(100).RData")
+#100
+table=t(cbind(Recom_leave_one_out_naive[,1],Recom_leave_one_out_ACE[,1],Recom_leave_one_out_half_ACE[,1],Recom_leave_one_out_mixed_ACE[,1],Recom_leave_one_out_SLHD[,1]))
+table[,1]=table[,1]/floor(N*Col[1]/3)
+table[,2]=table[,2]/floor(N*Col[1]*(N-1)/6)
+table[,3]=Recom_leave_one_out_rho_LB[1]/table[,3]
+table[,4]=Recom_leave_one_out_phi_LB[1]/table[,4]
+table[,5]=(N-1)*(N-2)/2/(N*Col[1]/3)/table[,5]
+table[,6]=1/table[,6]
+table=round(table,3)
