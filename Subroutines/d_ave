@@ -1,0 +1,6 @@
+#average L_p distance
+d_ave<-function(N,k,p)
+{
+  y=floor((N/2)^(p-1)*(N+1)*k/3)
+  return(y)
+}
