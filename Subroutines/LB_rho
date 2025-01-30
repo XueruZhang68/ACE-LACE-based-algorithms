@@ -1,0 +1,6 @@
+LB_rho<-function(N,S)
+{
+  y=0
+  y=max(0,(S+1-N)/((N-1)*(S-1)))
+  return(y)
+}
