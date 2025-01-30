@@ -162,7 +162,7 @@ points(mtotal,Recom_Num0.8[[4]][1,]/ntotal,col="orange",pch=2, cex=0.6)
 points(mtotal,Recom_Num0.8[[5]][1,]/ntotal,col="green3",pch=0, cex=0.6)
 #lines(c(7:42),Recom_Num0.8[[6]][1,1:36]/ntotal,col="blue",lty=3,lwd=1)
 points(mtotal,Recom_Num0.8[[6]][1,]/ntotal,col="blue",pch=20, cex=0.6)
-legend("topright",  inset=0.001, c("AS1","A1","A2","A3","SLHD","lhs"),lty=c(3,3,3,3,3,3), pch=c(5,15,1,2,0,20),col=c("black","purple","red","orange","green3","blue"),cex=0.8) 
+legend("topright",  inset=0.001, c("A0","A1","A2","A3","SLHD","lhs"),lty=c(3,3,3,3,3,3), pch=c(5,15,1,2,0,20),col=c("black","purple","red","orange","green3","blue"),cex=0.8) 
 
 
 plot(mtotal,Recom_Num0.9[[1]][1,]/ntotal,type="p",col="black",ylim = c(0,200),xlim = c(0,(N*N0)),xlab = "m",ylab = "Average minimum number",cex.lab=0.9,pch=5, cex=0.6,lty=3,lwd=1,main=expression(paste("(c) ", p==1 ,",", delta==0.9)),cex.main=1)
@@ -176,7 +176,7 @@ points(mtotal,Recom_Num0.9[[4]][1,]/ntotal,col="orange",pch=2, cex=0.6)
 points(mtotal,Recom_Num0.9[[5]][1,]/ntotal,col="green3",pch=0, cex=0.6)
 #lines(c(7:42),Recom_Num0.9[[6]][1,1:36]/ntotal,col="blue",lty=3,lwd=1)
 points(mtotal,Recom_Num0.9[[6]][1,]/ntotal,col="blue",pch=20, cex=0.6)
-legend("topright",  inset=0.001, c("AS1","A1","A2","A3","SLHD","lhs"),lty=c(3,3,3,3,3,3), pch=c(5,15,1,2,0,20),col=c("black","purple","red","orange","green3","blue"),cex=0.8) 
+legend("topright",  inset=0.001, c("A0","A1","A2","A3","SLHD","lhs"),lty=c(3,3,3,3,3,3), pch=c(5,15,1,2,0,20),col=c("black","purple","red","orange","green3","blue"),cex=0.8) 
 
 
 
@@ -191,7 +191,7 @@ points(mtotal,Recom_Num0.8[[4]][2,]/ntotal,col="orange",pch=2, cex=0.6)
 points(mtotal,Recom_Num0.8[[5]][2,]/ntotal,col="green3",pch=0, cex=0.6)
 #lines(c(7:42),Recom_Num0.8[[6]][2,1:36]/ntotal,col="blue",lty=3,lwd=1)
 points(mtotal,Recom_Num0.8[[6]][2,]/ntotal,col="blue",pch=20, cex=0.6)
-legend("topright",  inset=0.001, c("AS1","A1","A2","A3","SLHD","lhs"),lty=c(3,3,3,3,3,3), pch=c(5,15,1,2,0,20),col=c("black","purple","red","orange","green3","blue"),cex=0.8) 
+legend("topright",  inset=0.001, c("A0","A1","A2","A3","SLHD","lhs"),lty=c(3,3,3,3,3,3), pch=c(5,15,1,2,0,20),col=c("black","purple","red","orange","green3","blue"),cex=0.8) 
 
 
 plot(mtotal,Recom_Num0.9[[1]][2,]/ntotal,type="p",col="black",ylim = c(0,200),xlim = c(0,(N*N0)),xlab = "m",ylab = "Average minimum number",cex.lab=0.9,pch=5, cex=0.6,lty=3,lwd=1,main=expression(paste("(d) ", p==2 ,",", delta==0.9)),cex.main=1)
@@ -205,5 +205,5 @@ points(mtotal,Recom_Num0.9[[4]][2,]/ntotal,col="orange",pch=2, cex=0.6)
 points(mtotal,Recom_Num0.9[[5]][2,]/ntotal,col="green3",pch=0, cex=0.6)
 #lines(c(7:42),Recom_Num0.9[[6]][2,1:36]/ntotal,col="blue",lty=3,lwd=1)
 points(mtotal,Recom_Num0.9[[6]][2,]/ntotal,col="blue",pch=20, cex=0.6)
-legend("right",  inset=0.001, c("AS1","A1","A2","A3","SLHD","lhs"),lty=c(3,3,3,3,3,3), pch=c(5,15,1,2,0,20),col=c("black","purple","red","orange","green3","blue"),cex=0.8) 
+legend("right",  inset=0.001, c("A0","A1","A2","A3","SLHD","lhs"),lty=c(3,3,3,3,3,3), pch=c(5,15,1,2,0,20),col=c("black","purple","red","orange","green3","blue"),cex=0.8) 
 
