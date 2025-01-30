@@ -1,1 +1,32 @@
 
+total=500
+ N=7
+ x=5
+ T=1
+ total=200
+ r=0.95
+ n_trials=100
+ S_current <- SA_leave_one_out_naive(N,x,T,1,total,r)  
+  
+  for (i in 1:n_trials) {
+    # Generate a neighboring solution by making a small random change
+    S_new <- S_current
+    S_new[,1] <- permutation(1:N)
+    
+    # Compute objective function values
+    E_current <- L_2(S_current,1)
+    E_new <- L_2(S_new,1)
+    
+    # Compute energy difference
+    energy_differences[i] <- E_new - E_current
+    
+    # Accept the new solution with probability (SA step, optional)
+    if (E_new < E_current) {
+      S_current <- S_new  # Move to the new solution if it's better
+    }
+  }
+  
+
+
+# Compute initial temperature
+T0 <- 10 * mean(abs(energy_differences))
