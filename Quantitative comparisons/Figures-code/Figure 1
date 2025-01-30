@@ -1,1 +1,407 @@
+library(SLHD)
+library(lhs)
+library(MaxPro)
+ntotal=500
+N=7
+T=1
+r=0.95
+step=10
+delta=0.01^2
+N0=length(Euler(N))
+NNNN=36
 
+
+total=50
+Recom_naive=matrix(0,6,N*N0-1)
+Recom_ACE=matrix(0,6,N*N0-1)
+Recom_half_ACE=matrix(0,6,N*N0-1)
+Recom_mixed_ACE=matrix(0,6,N*N0-1)
+Recom_SLHD=matrix(0,6,N*N0-1)
+Recom_lhd=matrix(0,6,N*N0-1)
+Recom_rho_LB=sapply(2:(N*N0), FUN=function(x){return(LB_rho(N,x))})
+Recom_phi_LB=sapply(2:(N*N0), FUN=function(x){return(LB_phi(N,x))})
+for (i in 1:ntotal){
+  final.out.put_naive=mclapply(2:(N*N0), FUN=function(x){D1=SA_naive(N,x,T,1,total,r);D2=SA_naive(N,x,T,2,total,r);return(c(L_2(D1,1),L_2(D2,2),Coff(D2),UNI_PRO(D1),phi_p(D1,1),MaxProMeasure(D1,p_nom=0)))}, mc.cores = NNNN)
+  Recom_naive=Recom_naive+sapply(1:(N*N0-1),function(x){final.out.put_naive[[x]]})
+  
+  final.out.put_ACE=mclapply(2:(N*N0), FUN=function(x){D1=SA_ACE_combined(N,x,T,1,total,r,step,delta);D2=SA_ACE_combined(N,x,T,2,total,r,step,delta);return(c(L_2(D1,1),L_2(D2,2),Coff(D2),UNI_PRO(D1),phi_p(D1,1),MaxProMeasure(D1,p_nom=0)))}, mc.cores = NNNN)
+  Recom_ACE=Recom_ACE+sapply(1:(N*N0-1),function(x){final.out.put_ACE[[x]]})
+  
+  final.out.put_half_ACE=mclapply(2:(N*N0), FUN=function(x){D1=SA_half_ACE_combined(N,x,T,1,total,r,step,delta);D2=SA_half_ACE_combined(N,x,T,2,total,r,step,delta);return(c(L_2(D1,1),L_2(D2,2),Coff(D2),UNI_PRO(D1),phi_p(D1,1),MaxProMeasure(D1,p_nom=0)))}, mc.cores = NNNN)
+  Recom_half_ACE=Recom_half_ACE+sapply(1:(N*N0-1),function(x){final.out.put_half_ACE[[x]]})
+  
+  final.out.put_mixed_ACE=mclapply(2:(N*N0), FUN=function(x){D1=SA_mixed_ACE_combined(N,x,T,1,total,r,step,delta);D2=SA_mixed_ACE_combined(N,x,T,2,total,r,step,delta);return(c(L_2(D1,1),L_2(D2,2),Coff(D2),UNI_PRO(D1),phi_p(D1,1),MaxProMeasure(D1,p_nom=0)))}, mc.cores = NNNN)
+  Recom_mixed_ACE=Recom_mixed_ACE+sapply(1:(N*N0-1),function(x){final.out.put_mixed_ACE[[x]]})
+  
+  final.out.put_SLHD=mclapply(2:(N*N0), FUN=function(x){D=maximinSLHD(1, N, x, power = 15, nstarts = 1, itermax = 1, total_iter =total)$Design;return(c(L_2(D,1),L_2(D,2),Coff(D),UNI_PRO(D),phi_p(D,1),MaxProMeasure(D,p_nom=0)))}, mc.cores = NNNN)
+  Recom_SLHD=Recom_SLHD+sapply(1:(N*N0-1),function(x){final.out.put_SLHD[[x]]})
+  
+  final.out.put_lhd=mclapply(2:(N*N0), FUN=function(x){aa=maximinLHS(N,x, method="iterative", eps=0.05, maxIter=total, optimize.on="grid");D=sapply(1:x,function(x){order(aa[,x])});return(c(L_2(D,1),L_2(D,2),Coff(D),UNI_PRO(D),phi_p(D,1),MaxProMeasure(D,p_nom=0)))}, mc.cores = NNNN)
+  Recom_lhd=Recom_lhd+sapply(1:(N*N0-1),function(x){final.out.put_lhd[[x]]})
+}
+
+
+Recom_total50=list(Recom_naive,
+                     Recom_ACE,
+                     Recom_half_ACE,
+                     Recom_mixed_ACE,
+                     Recom_SLHD,
+                     Recom_lhd)
+
+
+total=200
+Recom_naive=matrix(0,6,N*N0-1)
+Recom_ACE=matrix(0,6,N*N0-1)
+Recom_half_ACE=matrix(0,6,N*N0-1)
+Recom_mixed_ACE=matrix(0,6,N*N0-1)
+Recom_SLHD=matrix(0,6,N*N0-1)
+Recom_lhd=matrix(0,6,N*N0-1)
+Recom_rho_LB=sapply(2:(N*N0), FUN=function(x){return(LB_rho(N,x))})
+Recom_phi_LB=sapply(2:(N*N0), FUN=function(x){return(LB_phi(N,x))})
+for (i in 1:ntotal){
+  final.out.put_naive=mclapply(2:(N*N0), FUN=function(x){D1=SA_naive(N,x,T,1,total,r);D2=SA_naive(N,x,T,2,total,r);return(c(L_2(D1,1),L_2(D2,2),Coff(D2),UNI_PRO(D1),phi_p(D1,1),MaxProMeasure(D1,p_nom=0)))}, mc.cores = NNNN)
+  Recom_naive=Recom_naive+sapply(1:(N*N0-1),function(x){final.out.put_naive[[x]]})
+  
+  final.out.put_ACE=mclapply(2:(N*N0), FUN=function(x){D1=SA_ACE_combined(N,x,T,1,total,r,step,delta);D2=SA_ACE_combined(N,x,T,2,total,r,step,delta);return(c(L_2(D1,1),L_2(D2,2),Coff(D2),UNI_PRO(D1),phi_p(D1,1),MaxProMeasure(D1,p_nom=0)))}, mc.cores = NNNN)
+  Recom_ACE=Recom_ACE+sapply(1:(N*N0-1),function(x){final.out.put_ACE[[x]]})
+  
+  final.out.put_half_ACE=mclapply(2:(N*N0), FUN=function(x){D1=SA_half_ACE_combined(N,x,T,1,total,r,step,delta);D2=SA_half_ACE_combined(N,x,T,2,total,r,step,delta);return(c(L_2(D1,1),L_2(D2,2),Coff(D2),UNI_PRO(D1),phi_p(D1,1),MaxProMeasure(D1,p_nom=0)))}, mc.cores = NNNN)
+  Recom_half_ACE=Recom_half_ACE+sapply(1:(N*N0-1),function(x){final.out.put_half_ACE[[x]]})
+  
+  final.out.put_mixed_ACE=mclapply(2:(N*N0), FUN=function(x){D1=SA_mixed_ACE_combined(N,x,T,1,total,r,step,delta);D2=SA_mixed_ACE_combined(N,x,T,2,total,r,step,delta);return(c(L_2(D1,1),L_2(D2,2),Coff(D2),UNI_PRO(D1),phi_p(D1,1),MaxProMeasure(D1,p_nom=0)))}, mc.cores = NNNN)
+  Recom_mixed_ACE=Recom_mixed_ACE+sapply(1:(N*N0-1),function(x){final.out.put_mixed_ACE[[x]]})
+  
+  final.out.put_SLHD=mclapply(2:(N*N0), FUN=function(x){D=maximinSLHD(1, N, x, power = 15, nstarts = 1, itermax = 1, total_iter =total)$Design;return(c(L_2(D,1),L_2(D,2),Coff(D),UNI_PRO(D),phi_p(D,1),MaxProMeasure(D,p_nom=0)))}, mc.cores = NNNN)
+  Recom_SLHD=Recom_SLHD+sapply(1:(N*N0-1),function(x){final.out.put_SLHD[[x]]})
+  
+  final.out.put_lhd=mclapply(2:(N*N0), FUN=function(x){aa=maximinLHS(N,x, method="iterative", eps=0.05, maxIter=total, optimize.on="grid");D=sapply(1:x,function(x){order(aa[,x])});return(c(L_2(D,1),L_2(D,2),Coff(D),UNI_PRO(D),phi_p(D,1),MaxProMeasure(D,p_nom=0)))}, mc.cores = NNNN)
+  Recom_lhd=Recom_lhd+sapply(1:(N*N0-1),function(x){final.out.put_lhd[[x]]})
+}
+
+
+Recom_total200=list(Recom_naive,
+                   Recom_ACE,
+                   Recom_half_ACE,
+                   Recom_mixed_ACE,
+                   Recom_SLHD,
+                   Recom_lhd)
+
+total=1000
+Recom_naive=matrix(0,6,N*N0-1)
+Recom_ACE=matrix(0,6,N*N0-1)
+Recom_half_ACE=matrix(0,6,N*N0-1)
+Recom_mixed_ACE=matrix(0,6,N*N0-1)
+Recom_SLHD=matrix(0,6,N*N0-1)
+Recom_lhd=matrix(0,6,N*N0-1)
+Recom_rho_LB=sapply(2:(N*N0), FUN=function(x){return(LB_rho(N,x))})
+Recom_phi_LB=sapply(2:(N*N0), FUN=function(x){return(LB_phi(N,x))})
+for (i in 1:ntotal){
+  final.out.put_naive=mclapply(2:(N*N0), FUN=function(x){D1=SA_naive(N,x,T,1,total,r);D2=SA_naive(N,x,T,2,total,r);return(c(L_2(D1,1),L_2(D2,2),Coff(D2),UNI_PRO(D1),phi_p(D1,1),MaxProMeasure(D1,p_nom=0)))}, mc.cores = NNNN)
+  Recom_naive=Recom_naive+sapply(1:(N*N0-1),function(x){final.out.put_naive[[x]]})
+  
+  final.out.put_ACE=mclapply(2:(N*N0), FUN=function(x){D1=SA_ACE_combined(N,x,T,1,total,r,step,delta);D2=SA_ACE_combined(N,x,T,2,total,r,step,delta);return(c(L_2(D1,1),L_2(D2,2),Coff(D2),UNI_PRO(D1),phi_p(D1,1),MaxProMeasure(D1,p_nom=0)))}, mc.cores = NNNN)
+  Recom_ACE=Recom_ACE+sapply(1:(N*N0-1),function(x){final.out.put_ACE[[x]]})
+  
+  final.out.put_half_ACE=mclapply(2:(N*N0), FUN=function(x){D1=SA_half_ACE_combined(N,x,T,1,total,r,step,delta);D2=SA_half_ACE_combined(N,x,T,2,total,r,step,delta);return(c(L_2(D1,1),L_2(D2,2),Coff(D2),UNI_PRO(D1),phi_p(D1,1),MaxProMeasure(D1,p_nom=0)))}, mc.cores = NNNN)
+  Recom_half_ACE=Recom_half_ACE+sapply(1:(N*N0-1),function(x){final.out.put_half_ACE[[x]]})
+  
+  final.out.put_mixed_ACE=mclapply(2:(N*N0), FUN=function(x){D1=SA_mixed_ACE_combined(N,x,T,1,total,r,step,delta);D2=SA_mixed_ACE_combined(N,x,T,2,total,r,step,delta);return(c(L_2(D1,1),L_2(D2,2),Coff(D2),UNI_PRO(D1),phi_p(D1,1),MaxProMeasure(D1,p_nom=0)))}, mc.cores = NNNN)
+  Recom_mixed_ACE=Recom_mixed_ACE+sapply(1:(N*N0-1),function(x){final.out.put_mixed_ACE[[x]]})
+  
+  final.out.put_SLHD=mclapply(2:(N*N0), FUN=function(x){D=maximinSLHD(1, N, x, power = 15, nstarts = 1, itermax = 1, total_iter =total)$Design;return(c(L_2(D,1),L_2(D,2),Coff(D),UNI_PRO(D),phi_p(D,1),MaxProMeasure(D,p_nom=0)))}, mc.cores = NNNN)
+  Recom_SLHD=Recom_SLHD+sapply(1:(N*N0-1),function(x){final.out.put_SLHD[[x]]})
+  
+  final.out.put_lhd=mclapply(2:(N*N0), FUN=function(x){aa=maximinLHS(N,x, method="iterative", eps=0.05, maxIter=total, optimize.on="grid");D=sapply(1:x,function(x){order(aa[,x])});return(c(L_2(D,1),L_2(D,2),Coff(D),UNI_PRO(D),phi_p(D,1),MaxProMeasure(D,p_nom=0)))}, mc.cores = NNNN)
+  Recom_lhd=Recom_lhd+sapply(1:(N*N0-1),function(x){final.out.put_lhd[[x]]})
+}
+
+
+Recom_total000=list(Recom_naive,
+                    Recom_ACE,
+                    Recom_half_ACE,
+                    Recom_mixed_ACE,
+                    Recom_SLHD,
+                    Recom_lhd)
+save.image("ACE7.RData")
+
+
+#################Figure 1################################################
+#ACE-L_p
+#ACE-L_p
+ntotal=500
+mtotal=2:(N*N0)
+par(mfcol=c(2,3)) 
+plot(2:(N*N0),Recom_leave_one_out_total50[[1]][1,]/ntotal/floor(7*mtotal/3),type="b",col="black",ylim = c(0.5,1),xlim = c(1,42),xlab="m",ylab = expression(paste("Average ", Eff[1])),cex.lab=1,pch=5, cex=0.6,lty=3,lwd=1)
+lines(mtotal,Recom_leave_one_out_total50[[2]][1,]/ntotal/floor(7*mtotal/3),col="purple",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total50[[2]][1,]/ntotal/floor(7*mtotal/3),col="purple",pch=15, cex=0.6)
+lines(mtotal,Recom_leave_one_out_total50[[3]][1,]/ntotal/floor(7*mtotal/3),col="red",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total50[[3]][1,]/ntotal/floor(7*mtotal/3),col="red",pch=1, cex=0.6)
+lines(mtotal,Recom_leave_one_out_total50[[4]][1,]/ntotal/floor(7*mtotal/3),col="orange",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total50[[4]][1,]/ntotal/floor(7*mtotal/3),col="orange",pch=2, cex=0.6)
+lines(mtotal,Recom_leave_one_out_total50[[5]][1,]/ntotal/floor(7*mtotal/3),col="green3",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total50[[5]][1,]/ntotal/floor(7*mtotal/3),col="green3",pch=0, cex=0.6)
+lines(mtotal,Recom_leave_one_out_total50[[6]][1,]/ntotal/floor(7*mtotal/3),col="blue",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total50[[6]][1,]/ntotal/floor(7*mtotal/3),col="blue",pch=20, cex=0.6)
+legend("bottomright",  inset=0.001, c(expression(A0[L]),expression(A1[L]),expression(A2[L]),expression(A3[L]),"SLHD","lhs"),lty=c(3,3,3,3,3,3), pch=c(5,15,1,2,0,20),col=c("black","purple","red","orange","green3","blue"),cex=0.8) 
+title("(a) R=50")
+
+
+plot(2:(N*N0),Recom_leave_one_out_total50[[1]][2,]/ntotal/floor(7*mtotal*(N-1)/6),type="b",col="black",ylim = c(0.1,1),xlim = c(1,42),xlab = "m",ylab = expression(paste("Average ", Eff[2])),cex.lab=1,pch=5, cex=0.6,lty=3,lwd=1)
+lines(mtotal,Recom_leave_one_out_total50[[2]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="purple",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total50[[2]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="purple",pch=15, cex=0.6)
+lines(mtotal,Recom_leave_one_out_total50[[3]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="red",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total50[[3]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="red",pch=1, cex=0.6)
+lines(mtotal,Recom_leave_one_out_total50[[4]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="orange",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total50[[4]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="orange",pch=2, cex=0.6)
+lines(mtotal,Recom_leave_one_out_total50[[5]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="green3",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total50[[5]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="green3",pch=0, cex=0.6)
+lines(mtotal,Recom_leave_one_out_total50[[6]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="blue",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total50[[6]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="blue",pch=20, cex=0.6)
+legend("bottomright",  inset=0.001, c(expression(A0[L]),expression(A1[L]),expression(A2[L]),expression(A3[L]),"SLHD","lhs"),lty=c(3,3,3,3,3,3), pch=c(5,15,1,2,0,20),col=c("black","purple","red","orange","green3","blue"),cex=0.8) 
+title("(d) R=50")
+
+plot(2:(N*N0),Recom_leave_one_out_total200[[1]][1,]/ntotal/floor(7*mtotal/3),type="b",col="black",ylim = c(0.5,1),xlim = c(1,42),xlab = "m",ylab = expression(paste("Average ", Eff[1])),cex.lab=1,pch=5, cex=0.6,lty=3,lwd=1)
+lines(mtotal,Recom_leave_one_out_total200[[2]][1,]/ntotal/floor(7*mtotal/3),col="purple",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total200[[2]][1,]/ntotal/floor(7*mtotal/3),col="purple",pch=15, cex=0.6)
+lines(mtotal,Recom_leave_one_out_total200[[3]][1,]/ntotal/floor(7*mtotal/3),col="red",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total200[[3]][1,]/ntotal/floor(7*mtotal/3),col="red",pch=1, cex=0.6)
+lines(mtotal,Recom_leave_one_out_total200[[4]][1,]/ntotal/floor(7*mtotal/3),col="orange",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total200[[4]][1,]/ntotal/floor(7*mtotal/3),col="orange",pch=2, cex=0.6)
+lines(mtotal,Recom_leave_one_out_total200[[5]][1,]/ntotal/floor(7*mtotal/3),col="green3",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total200[[5]][1,]/ntotal/floor(7*mtotal/3),col="green3",pch=0, cex=0.6)
+lines(mtotal,Recom_leave_one_out_total200[[6]][1,]/ntotal/floor(7*mtotal/3),col="blue",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total200[[6]][1,]/ntotal/floor(7*mtotal/3),col="blue",pch=20, cex=0.6)
+legend("bottomright",  inset=0.001, c(expression(A0[L]),expression(A1[L]),expression(A2[L]),expression(A3[L]),"SLHD","lhs"),lty=c(3,3,3,3,3,3), pch=c(5,15,1,2,0,20),col=c("black","purple","red","orange","green3","blue"),cex=0.8) 
+title("(b) R=200")
+
+
+plot(2:(N*N0),Recom_leave_one_out_total200[[1]][2,]/ntotal/floor(7*mtotal*(N-1)/6),type="b",col="black",ylim = c(0.1,1),xlim = c(1,42),xlab = "m",ylab = expression(paste("Average ", Eff[2])),cex.lab=1,pch=5, cex=0.6,lty=3,lwd=1)
+lines(mtotal,Recom_leave_one_out_total200[[2]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="purple",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total200[[2]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="purple",pch=15, cex=0.6)
+lines(mtotal,Recom_leave_one_out_total200[[3]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="red",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total200[[3]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="red",pch=1, cex=0.6)
+lines(mtotal,Recom_leave_one_out_total200[[4]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="orange",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total200[[4]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="orange",pch=2, cex=0.6)
+lines(mtotal,Recom_leave_one_out_total200[[5]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="green3",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total200[[5]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="green3",pch=0, cex=0.6)
+lines(mtotal,Recom_leave_one_out_total200[[6]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="blue",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total200[[6]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="blue",pch=20, cex=0.6)
+legend("bottomright",  inset=0.001, c(expression(A0[L]),expression(A1[L]),expression(A2[L]),expression(A3[L]),"SLHD","lhs"),lty=c(3,3,3,3,3,3), pch=c(5,15,1,2,0,20),col=c("black","purple","red","orange","green3","blue"),cex=0.8) 
+title("(e) R=200")
+
+plot(2:(N*N0),Recom_leave_one_out_total1000[[1]][1,]/ntotal/floor(7*mtotal/3),type="b",col="black",ylim = c(0.5,1),xlim = c(1,42),xlab = "m",ylab = expression(paste("Average ", Eff[1])),cex.lab=1,pch=5, cex=0.6,lty=3,lwd=1)
+lines(mtotal,Recom_leave_one_out_total1000[[2]][1,]/ntotal/floor(7*mtotal/3),col="purple",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total1000[[2]][1,]/ntotal/floor(7*mtotal/3),col="purple",pch=15, cex=0.6)
+lines(mtotal,Recom_leave_one_out_total1000[[3]][1,]/ntotal/floor(7*mtotal/3),col="red",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total1000[[3]][1,]/ntotal/floor(7*mtotal/3),col="red",pch=1, cex=0.6)
+lines(mtotal,Recom_leave_one_out_total1000[[4]][1,]/ntotal/floor(7*mtotal/3),col="orange",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total1000[[4]][1,]/ntotal/floor(7*mtotal/3),col="orange",pch=2, cex=0.6)
+lines(mtotal,Recom_leave_one_out_total1000[[5]][1,]/ntotal/floor(7*mtotal/3),col="green3",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total1000[[5]][1,]/ntotal/floor(7*mtotal/3),col="green3",pch=0, cex=0.6)
+lines(mtotal,Recom_leave_one_out_total1000[[6]][1,]/ntotal/floor(7*mtotal/3),col="blue",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total1000[[6]][1,]/ntotal/floor(7*mtotal/3),col="blue",pch=20, cex=0.6)
+legend("bottomright",  inset=0.001, c(expression(A0[L]),expression(A1[L]),expression(A2[L]),expression(A3[L]),"SLHD","lhs"),lty=c(3,3,3,3,3,3), pch=c(5,15,1,2,0,20),col=c("black","purple","red","orange","green3","blue"),cex=0.8) 
+title("(c) R=1000")
+
+
+plot(2:(N*N0),Recom_leave_one_out_total1000[[1]][2,]/ntotal/floor(7*mtotal*(N-1)/6),type="b",col="black",ylim = c(0.1,1),xlim = c(1,42),xlab = "m",ylab = expression(paste("Average ", Eff[2])),cex.lab=1,pch=5, cex=0.6,lty=3,lwd=1)
+lines(mtotal,Recom_leave_one_out_total1000[[2]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="purple",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total1000[[2]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="purple",pch=15, cex=0.6)
+lines(mtotal,Recom_leave_one_out_total1000[[3]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="red",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total1000[[3]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="red",pch=1, cex=0.6)
+lines(mtotal,Recom_leave_one_out_total1000[[4]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="orange",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total1000[[4]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="orange",pch=2, cex=0.6)
+lines(mtotal,Recom_leave_one_out_total1000[[5]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="green3",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total1000[[5]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="green3",pch=0, cex=0.6)
+lines(mtotal,Recom_leave_one_out_total1000[[6]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="blue",lty=3,lwd=1)
+points(mtotal,Recom_leave_one_out_total1000[[6]][2,]/ntotal/floor(7*mtotal*(N-1)/6),col="blue",pch=20, cex=0.6)
+legend("bottomright",  inset=0.001, c(expression(A0[L]),expression(A1[L]),expression(A2[L]),expression(A3[L]),"SLHD","lhs"),lty=c(3,3,3,3,3,3), pch=c(5,15,1,2,0,20),col=c("black","purple","red","orange","green3","blue"),cex=0.8) 
+title("(f) R=1000")
+
+################Figure 2################################################################
+#ACE-rho, phi_p,two phi criteria
+par(mfrow=c(4,3),mar=c(0,2,0,2)+2,oma=c(1,1,1,1)+1)
+plot(2:(N*N0),Recom_rho_LB/Recom_total50[[1]][3,]*ntotal,type="b",col="black",ylim = c(0,1),xlim = c(1,42),ylab = expression(paste("Average ",Eff[rho^2])),xaxt="n",cex.lab=0.9,pch=5, cex=0.5,lty=3,lwd=1)
+axis(1,c(0:4*10),labels=c("0","10", "20","30", "40 (m)"))
+lines(mtotal,Recom_rho_LB/Recom_total50[[2]][3,]*ntotal,col="purple",lty=3,lwd=1)
+points(mtotal,Recom_rho_LB/Recom_total50[[2]][3,]*ntotal,col="purple",pch=15, cex=0.5)
+lines(mtotal,Recom_rho_LB/Recom_total50[[3]][3,]*ntotal,col="red",lty=3,lwd=1)
+points(mtotal,Recom_rho_LB/Recom_total50[[3]][3,]*ntotal,col="red",pch=1, cex=0.5)
+lines(mtotal,Recom_rho_LB/Recom_total50[[4]][3,]*ntotal,col="orange",lty=3,lwd=1)
+points(mtotal,Recom_rho_LB/Recom_total50[[4]][3,]*ntotal,col="orange",pch=2, cex=0.5)
+lines(mtotal,Recom_rho_LB/Recom_total50[[5]][3,]*ntotal,col="green3",lty=3,lwd=1)
+points(mtotal,Recom_rho_LB/Recom_total50[[5]][3,]*ntotal,col="green3",pch=0, cex=0.5)
+lines(mtotal,Recom_rho_LB/Recom_total50[[6]][3,]*ntotal,col="blue",lty=3,lwd=1)
+points(mtotal,Recom_rho_LB/Recom_total50[[6]][3,]*ntotal,col="blue",pch=20, cex=0.5)
+legend("bottomright",  inset=0.001, c("A0","A1","A2","A3","SLHD","lhs"),lty=c(3,3,3,3,3,3), pch=c(5,15,1,2,0,20),col=c("black","purple","red","orange","green3","blue"),cex=0.8) 
+title("(a) R=50")
+
+plot(2:(N*N0),Recom_rho_LB/Recom_total200[[1]][3,]*ntotal,type="b",col="black",ylim = c(0,1),xlim = c(1,42),xlab = "m",ylab = expression(paste("Average ",Eff[rho^2])),xaxt="n",cex.lab=0.9,pch=5, cex=0.5,lty=3,lwd=1)
+axis(1,c(0:4*10),labels=c("0","10", "20","30", "40 (m)"))
+lines(mtotal,Recom_rho_LB/Recom_total200[[2]][3,]*ntotal,col="purple",lty=3,lwd=1)
+points(mtotal,Recom_rho_LB/Recom_total200[[2]][3,]*ntotal,col="purple",pch=15, cex=0.5)
+lines(mtotal,Recom_rho_LB/Recom_total200[[3]][3,]*ntotal,col="red",lty=3,lwd=1)
+points(mtotal,Recom_rho_LB/Recom_total200[[3]][3,]*ntotal,col="red",pch=1, cex=0.5)
+lines(mtotal,Recom_rho_LB/Recom_total200[[4]][3,]*ntotal,col="orange",lty=3,lwd=1)
+points(mtotal,Recom_rho_LB/Recom_total200[[4]][3,]*ntotal,col="orange",pch=2, cex=0.5)
+lines(mtotal,Recom_rho_LB/Recom_total200[[5]][3,]*ntotal,col="green3",lty=3,lwd=1)
+points(mtotal,Recom_rho_LB/Recom_total200[[5]][3,]*ntotal,col="green3",pch=0, cex=0.5)
+lines(mtotal,Recom_rho_LB/Recom_total200[[6]][3,]*ntotal,col="blue",lty=3,lwd=1)
+points(mtotal,Recom_rho_LB/Recom_total200[[6]][3,]*ntotal,col="blue",pch=20, cex=0.5)
+legend("bottomright",  inset=0.001, c("A0","A1","A2","A3","SLHD","lhs"),lty=c(3,3,3,3,3,3), pch=c(5,15,1,2,0,20),col=c("black","purple","red","orange","green3","blue"),cex=0.8) 
+title("(b) R=200")
+
+
+plot(2:(N*N0),Recom_rho_LB/Recom_total000[[1]][3,]*ntotal,type="b",col="black",ylim = c(0,1),xlim = c(1,42),xlab = "m",ylab = expression(paste("Average ",Eff[rho^2])),xaxt="n",cex.lab=0.9,pch=5, cex=0.5,lty=3,lwd=1)
+axis(1,c(0:4*10),labels=c("0","10", "20","30", "40 (m)"))
+lines(mtotal,Recom_rho_LB/Recom_total000[[2]][3,]*ntotal,col="purple",lty=3,lwd=1)
+points(mtotal,Recom_rho_LB/Recom_total000[[2]][3,]*ntotal,col="purple",pch=15, cex=0.5)
+lines(mtotal,Recom_rho_LB/Recom_total000[[3]][3,]*ntotal,col="red",lty=3,lwd=1)
+points(mtotal,Recom_rho_LB/Recom_total000[[3]][3,]*ntotal,col="red",pch=1, cex=0.5)
+lines(mtotal,Recom_rho_LB/Recom_total000[[4]][3,]*ntotal,col="orange",lty=3,lwd=1)
+points(mtotal,Recom_rho_LB/Recom_total000[[4]][3,]*ntotal,col="orange",pch=2, cex=0.5)
+lines(mtotal,Recom_rho_LB/Recom_total000[[5]][3,]*ntotal,col="green3",lty=3,lwd=1)
+points(mtotal,Recom_rho_LB/Recom_total000[[5]][3,]*ntotal,col="green3",pch=0, cex=0.5)
+lines(mtotal,Recom_rho_LB/Recom_total000[[6]][3,]*ntotal,col="blue",lty=3,lwd=1)
+points(mtotal,Recom_rho_LB/Recom_total000[[6]][3,]*ntotal,col="blue",pch=20, cex=0.5)
+legend("bottomright",  inset=0.001, c("A0","A1","A2","A3","SLHD","lhs"),lty=c(3,3,3,3,3,3), pch=c(5,15,1,2,0,20),col=c("black","purple","red","orange","green3","blue"),cex=0.8) 
+title("(c) R=1000")
+
+plot(2:(N*N0),Recom_phi_LB/Recom_total50[[1]][4,]*ntotal,type="b",col="black",ylim = c(0.1,1),xlim = c(1,42),xlab = "m",ylab = expression(paste("Average ",Eff[phi])),xaxt="n",cex.lab=0.9,pch=5, cex=0.5,lty=3,lwd=1)
+axis(1,c(0:4*10),labels=c("0","10", "20","30", "40 (m)"))
+lines(mtotal,Recom_phi_LB/Recom_total50[[2]][4,]*ntotal,col="purple",lty=3,lwd=1)
+points(mtotal,Recom_phi_LB/Recom_total50[[2]][4,]*ntotal,col="purple",pch=15, cex=0.5)
+lines(mtotal,Recom_phi_LB/Recom_total50[[3]][4,]*ntotal,col="red",lty=3,lwd=1)
+points(mtotal,Recom_phi_LB/Recom_total50[[3]][4,]*ntotal,col="red",pch=1, cex=0.5)
+lines(mtotal,Recom_phi_LB/Recom_total50[[4]][4,]*ntotal,col="orange",lty=3,lwd=1)
+points(mtotal,Recom_phi_LB/Recom_total50[[4]][4,]*ntotal,col="orange",pch=2, cex=0.5)
+lines(mtotal,Recom_phi_LB/Recom_total50[[5]][4,]*ntotal,col="green3",lty=3,lwd=1)
+points(mtotal,Recom_phi_LB/Recom_total50[[5]][4,]*ntotal,col="green3",pch=0, cex=0.5)
+lines(mtotal,Recom_phi_LB/Recom_total50[[6]][4,]*ntotal,col="blue",lty=3,lwd=1)
+points(mtotal,Recom_phi_LB/Recom_total50[[6]][4,]*ntotal,col="blue",pch=20, cex=0.5)
+legend("bottomright",  inset=0.001, c("A0","A1","A2","A3","SLHD","lhs"),lty=c(3,3,3,3,3,3), pch=c(5,15,1,2,0,20),col=c("black","purple","red","orange","green3","blue"),cex=0.8) 
+title("(d)  R=50")
+
+
+
+plot(2:(N*N0),Recom_phi_LB/Recom_total200[[1]][4,]*ntotal,type="b",col="black",ylim = c(0.1,1),xlim = c(1,42),xlab = "m",ylab = expression(paste("Average ",Eff[phi])),xaxt="n",cex.lab=0.9,pch=5, cex=0.5,lty=3,lwd=1)
+axis(1,c(0:4*10),labels=c("0","10", "20","30", "40 (m)"))
+lines(mtotal,Recom_phi_LB/Recom_total200[[2]][4,]*ntotal,col="purple",lty=3,lwd=1)
+points(mtotal,Recom_phi_LB/Recom_total200[[2]][4,]*ntotal,col="purple",pch=15, cex=0.5)
+lines(mtotal,Recom_phi_LB/Recom_total200[[3]][4,]*ntotal,col="red",lty=3,lwd=1)
+points(mtotal,Recom_phi_LB/Recom_total200[[3]][4,]*ntotal,col="red",pch=1, cex=0.5)
+lines(mtotal,Recom_phi_LB/Recom_total200[[4]][4,]*ntotal,col="orange",lty=3,lwd=1)
+points(mtotal,Recom_phi_LB/Recom_total200[[4]][4,]*ntotal,col="orange",pch=2, cex=0.5)
+lines(mtotal,Recom_phi_LB/Recom_total200[[5]][4,]*ntotal,col="green3",lty=3,lwd=1)
+points(mtotal,Recom_phi_LB/Recom_total200[[5]][4,]*ntotal,col="green3",pch=0, cex=0.5)
+lines(mtotal,Recom_phi_LB/Recom_total200[[6]][4,]*ntotal,col="blue",lty=3,lwd=1)
+points(mtotal,Recom_phi_LB/Recom_total200[[6]][4,]*ntotal,col="blue",pch=20, cex=0.5)
+legend("bottomright",  inset=0.001, c("A0","A1","A2","A3","SLHD","lhs"),lty=c(3,3,3,3,3,3), pch=c(5,15,1,2,0,20),col=c("black","purple","red","orange","green3","blue"),cex=0.8) 
+title("(e)  R=200")
+
+
+
+plot(2:(N*N0),Recom_phi_LB/Recom_total000[[1]][4,]*ntotal,type="b",col="black",ylim = c(0.1,1),xlim = c(1,42),xlab = "m",ylab = expression(paste("Average ",Eff[phi])),xaxt="n",cex.lab=0.9,pch=5, cex=0.5,lty=3,lwd=1)
+axis(1,c(0:4*10),labels=c("0","10", "20","30", "40 (m)"))
+lines(mtotal,Recom_phi_LB/Recom_total000[[2]][4,]*ntotal,col="purple",lty=3,lwd=1)
+points(mtotal,Recom_phi_LB/Recom_total000[[2]][4,]*ntotal,col="purple",pch=15, cex=0.5)
+lines(mtotal,Recom_phi_LB/Recom_total000[[3]][4,]*ntotal,col="red",lty=3,lwd=1)
+points(mtotal,Recom_phi_LB/Recom_total000[[3]][4,]*ntotal,col="red",pch=1, cex=0.5)
+lines(mtotal,Recom_phi_LB/Recom_total000[[4]][4,]*ntotal,col="orange",lty=3,lwd=1)
+points(mtotal,Recom_phi_LB/Recom_total000[[4]][4,]*ntotal,col="orange",pch=2, cex=0.5)
+lines(mtotal,Recom_phi_LB/Recom_total000[[5]][4,]*ntotal,col="green3",lty=3,lwd=1)
+points(mtotal,Recom_phi_LB/Recom_total000[[5]][4,]*ntotal,col="green3",pch=0, cex=0.5)
+lines(mtotal,Recom_phi_LB/Recom_total000[[6]][4,]*ntotal,col="blue",lty=3,lwd=1)
+points(mtotal,Recom_phi_LB/Recom_total000[[6]][4,]*ntotal,col="blue",pch=20, cex=0.5)
+legend("bottomright",  inset=0.001, c("A0","A1","A2","A3","SLHD","lhs"),lty=c(3,3,3,3,3,3), pch=c(5,15,1,2,0,20),col=c("black","purple","red","orange","green3","blue"),cex=0.8) 
+title("(f)  R=1000")
+
+plot(2:(N*N0),(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total50[[1]][5,],type="b",col="black",ylim = c(0.8,1),xlim = c(1,42),xlab = "m",ylab = expression(paste("Average ", Eff[phi[1]])),xaxt="n",cex.lab=0.9,pch=5, cex=0.5,lty=3,lwd=1)
+axis(1,c(0:4*10),labels=c("0","10", "20","30", "40 (m)"))
+lines(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total50[[2]][5,],col="purple",lty=3,lwd=1)
+points(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total50[[2]][5,],col="purple",pch=15, cex=0.5)
+lines(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total50[[3]][5,],col="red",lty=3,lwd=1)
+points(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total50[[3]][5,],col="red",pch=1, cex=0.5)
+lines(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total50[[4]][5,],col="orange",lty=3,lwd=1)
+points(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total50[[4]][5,],col="orange",pch=2, cex=0.5)
+lines(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total50[[5]][5,],col="green3",lty=3,lwd=1)
+points(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total50[[5]][5,],col="green3",pch=0, cex=0.5)
+lines(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total50[[6]][5,],col="blue",lty=3,lwd=1)
+points(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total50[[6]][5,],col="blue",pch=20, cex=0.5)
+legend("bottomright",  inset=0.001, c("A0","A1","A2","A3","SLHD","lhs"),lty=c(3,3,3,3,3,3), pch=c(5,15,1,2,0,20),col=c("black","purple","red","orange","green3","blue"),cex=0.8) 
+title("(g) R=50")
+
+plot(2:(N*N0),(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total200[[1]][5,],type="b",col="black",ylim = c(0.8,1),xlim = c(1,42),xlab = "m",ylab = expression(paste("Average ", Eff[phi[1]])),xaxt="n",cex.lab=0.9,pch=5, cex=0.5,lty=3,lwd=1)
+axis(1,c(0:4*10),labels=c("0","10", "20","30", "40 (m)"))
+lines(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total200[[2]][5,],col="purple",lty=3,lwd=1)
+points(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total200[[2]][5,],col="purple",pch=15, cex=0.5)
+lines(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total200[[3]][5,],col="red",lty=3,lwd=1)
+points(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total200[[3]][5,],col="red",pch=1, cex=0.5)
+lines(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total200[[4]][5,],col="orange",lty=3,lwd=1)
+points(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total200[[4]][5,],col="orange",pch=2, cex=0.5)
+lines(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total200[[5]][5,],col="green3",lty=3,lwd=1)
+points(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total200[[5]][5,],col="green3",pch=0, cex=0.5)
+lines(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total200[[6]][5,],col="blue",lty=3,lwd=1)
+points(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total200[[6]][5,],col="blue",pch=20, cex=0.5)
+legend("bottomright",  inset=0.001, c("A0","A1","A2","A3","SLHD","lhs"),lty=c(3,3,3,3,3,3), pch=c(5,15,1,2,0,20),col=c("black","purple","red","orange","green3","blue"),cex=0.8) 
+title("(h) R=200")
+
+plot(2:(N*N0),(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total000[[1]][5,],type="b",col="black",ylim = c(0.8,1),xlim = c(1,42),xlab = "m",ylab = expression(paste("Average ", Eff[phi[1]])),xaxt="n",cex.lab=0.9,pch=5, cex=0.5,lty=3,lwd=1)
+axis(1,c(0:4*10),labels=c("0","10", "20","30", "40 (m)"))
+lines(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total000[[2]][5,],col="purple",lty=3,lwd=1)
+points(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total000[[2]][5,],col="purple",pch=15, cex=0.5)
+lines(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total000[[3]][5,],col="red",lty=3,lwd=1)
+points(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total000[[3]][5,],col="red",pch=1, cex=0.5)
+lines(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total000[[4]][5,],col="orange",lty=3,lwd=1)
+points(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total000[[4]][5,],col="orange",pch=2, cex=0.5)
+lines(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total000[[5]][5,],col="green3",lty=3,lwd=1)
+points(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total000[[5]][5,],col="green3",pch=0, cex=0.5)
+lines(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total000[[6]][5,],col="blue",lty=3,lwd=1)
+points(mtotal,(N-1)*N/2/((N+1)*mtotal/3)*ntotal/Recom_total000[[6]][5,],col="blue",pch=20, cex=0.5)
+legend("bottomright",  inset=0.001, c("A0","A1","A2","A3","SLHD","lhs"),lty=c(3,3,3,3,3,3), pch=c(5,15,1,2,0,20),col=c("black","purple","red","orange","green3","blue"),cex=0.8) 
+title("(i) R=1000")
+
+plot(2:(N*N0),ntotal/Recom_total50[[1]][6,],type="b",col="black",ylim = c(2.5,5.5),xlim = c(1,42),xlab = "m",ylab = expression(paste("Average ", 1/tilde(phi))),xaxt="n",cex.lab=0.9,pch=5, cex=0.5,lty=3,lwd=1)
+axis(1,c(0:4*10),labels=c("0","10", "20","30", "40 (m)"))
+lines(mtotal,ntotal/Recom_total50[[2]][6,],col="purple",lty=3,lwd=1)
+points(mtotal,ntotal/Recom_total50[[2]][6,],col="purple",pch=15, cex=0.5)
+lines(mtotal,ntotal/Recom_total50[[3]][6,],col="red",lty=3,lwd=1)
+points(mtotal,ntotal/Recom_total50[[3]][6,],col="red",pch=1, cex=0.5)
+lines(mtotal,ntotal/Recom_total50[[4]][6,],col="orange",lty=3,lwd=1)
+points(mtotal,ntotal/Recom_total50[[4]][6,],col="orange",pch=2, cex=0.5)
+lines(mtotal,ntotal/Recom_total50[[5]][6,],col="green3",lty=3,lwd=1)
+points(mtotal,ntotal/Recom_total50[[5]][6,],col="green3",pch=0, cex=0.5)
+lines(mtotal,ntotal/Recom_total50[[6]][6,],col="blue",lty=3,lwd=1)
+points(mtotal,ntotal/Recom_total50[[6]][6,],col="blue",pch=20, cex=0.5)
+legend("bottomright",  inset=0.001, c("A0","A1","A2","A3","SLHD","lhs"),lty=c(3,3,3,3,3,3), pch=c(5,15,1,2,0,20),col=c("black","purple","red","orange","green3","blue"),cex=0.8) 
+title("(j) R=50")
+
+plot(2:(N*N0),ntotal/Recom_total200[[1]][6,],type="b",col="black",ylim = c(2.5,5.5),xlim = c(1,42),xlab = "m",ylab = expression(paste("Average ", 1/tilde(phi))),xaxt="n",cex.lab=0.9,pch=5, cex=0.5,lty=3,lwd=1)
+axis(1,c(0:4*10),labels=c("0","10", "20","30", "40 (m)"))
+lines(mtotal,ntotal/Recom_total200[[2]][6,],col="purple",lty=3,lwd=1)
+points(mtotal,ntotal/Recom_total200[[2]][6,],col="purple",pch=15, cex=0.5)
+lines(mtotal,ntotal/Recom_total200[[3]][6,],col="red",lty=3,lwd=1)
+points(mtotal,ntotal/Recom_total200[[3]][6,],col="red",pch=1, cex=0.5)
+lines(mtotal,ntotal/Recom_total200[[4]][6,],col="orange",lty=3,lwd=1)
+points(mtotal,ntotal/Recom_total200[[4]][6,],col="orange",pch=2, cex=0.5)
+lines(mtotal,ntotal/Recom_total200[[5]][6,],col="green3",lty=3,lwd=1)
+points(mtotal,ntotal/Recom_total200[[5]][6,],col="green3",pch=0, cex=0.5)
+lines(mtotal,ntotal/Recom_total200[[6]][6,],col="blue",lty=3,lwd=1)
+points(mtotal,ntotal/Recom_total200[[6]][6,],col="blue",pch=20, cex=0.5)
+legend("bottomright",  inset=0.001, c("A0","A1","A2","A3","SLHD","lhs"),lty=c(3,3,3,3,3,3), pch=c(5,15,1,2,0,20),col=c("black","purple","red","orange","green3","blue"),cex=0.8) 
+title("(k) R=200")
+
+plot(2:(N*N0),ntotal/Recom_total000[[1]][6,],type="b",col="black",ylim = c(2.5,5.5),xlim = c(1,42),xlab = "m",ylab = expression(paste("Average ", 1/tilde(phi))),xaxt="n",cex.lab=0.9,pch=5, cex=0.5,lty=3,lwd=1)
+axis(1,c(0:4*10),labels=c("0","10", "20","30", "40 (m)"))
+lines(mtotal,ntotal/Recom_total000[[2]][6,],col="purple",lty=3,lwd=1)
+points(mtotal,ntotal/Recom_total000[[2]][6,],col="purple",pch=15, cex=0.5)
+lines(mtotal,ntotal/Recom_total000[[3]][6,],col="red",lty=3,lwd=1)
+points(mtotal,ntotal/Recom_total000[[3]][6,],col="red",pch=1, cex=0.5)
+lines(mtotal,ntotal/Recom_total000[[4]][6,],col="orange",lty=3,lwd=1)
+points(mtotal,ntotal/Recom_total000[[4]][6,],col="orange",pch=2, cex=0.5)
+lines(mtotal,ntotal/Recom_total000[[5]][6,],col="green3",lty=3,lwd=1)
+points(mtotal,ntotal/Recom_total000[[5]][6,],col="green3",pch=0, cex=0.5)
+lines(mtotal,ntotal/Recom_total000[[6]][6,],col="blue",lty=3,lwd=1)
+points(mtotal,ntotal/Recom_total000[[6]][6,],col="blue",pch=20, cex=0.5)
+legend("bottomright",  inset=0.001, c("A0","A1","A2","A3","SLHD","lhs"),lty=c(3,3,3,3,3,3), pch=c(5,15,1,2,0,20),col=c("black","purple","red","orange","green3","blue"),cex=0.8) 
+title("(l) R=1000")
