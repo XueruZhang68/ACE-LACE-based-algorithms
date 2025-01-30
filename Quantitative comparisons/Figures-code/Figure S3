@@ -147,8 +147,6 @@ Recom_Num0.9=list(Recom_Num_naive,
                   Recom_Num_lhd)
 
 
-save.image("ACE7_Num.RData")
-
 mtotal=2:(N*N0)
 par(mfcol=c(2,2),mar=c(2,2,2,2)+2,oma=c(1,1,1,1)+1) 
 plot(mtotal,Recom_Num0.8[[1]][1,]/ntotal,type="p",col="black",ylim = c(0,200),xlim = c(0,(N*N0)),xlab = "m",ylab = "Average minimum number",cex.lab=0.9,pch=5, cex=0.6,lty=3,main=expression(paste("(a) ", p==1 ,",", delta==0.8)),cex.main=1)
