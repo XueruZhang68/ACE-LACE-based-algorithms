@@ -18,7 +18,7 @@ This repository hosts the R code that implements ACE/LACE-based algorithms and r
 
 - `Quantitative comparisons`:
   - A0<sub>L</sub>: The best collection of $m$ columns from $\mathcal{L}{(D_0)}$ by  simulated annealing
-    -
+    - dddd
   
 - 
 - figures/: R code for produing Figure 1-2 in the paper and Figure S1-S9 the supplementary material
