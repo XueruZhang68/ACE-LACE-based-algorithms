@@ -15,7 +15,11 @@ This repository hosts the R code that implements ACE/LACE-based algorithms and r
   - A3<sub>L</sub>: The $(D_1,D_1')$-based algorithm （LACE version）
   
 - `Subroutines`: all subroutines used in ACE/LACE
-- `Subroutines`:
+
+- `Quantitative comparisons`:
+  - A0<sub>L</sub>: The best collection of $m$ columns from $\mathcal{L}{(D_0)}$ by  simulated annealing
+    -
+  
 - 
 - figures/: R code for produing Figure 1-2 in the paper and Figure S1-S9 the supplementary material
 
