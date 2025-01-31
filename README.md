@@ -8,7 +8,7 @@ This repository hosts the R code that implements ACE/LACE-based algorithms and r
   - A2: The $D_1$-based algorithm
   - A3: The $(D_1,D_1')$-based algorithm
   - 
-- LACE/: R code of Algorithms 1<sub>L</sub>-3<sub>L</sub>
+- LACE/: R code of Algorithms 0<sub>L</sub>-3<sub>L</sub>
   - A0<sub>L</sub>: The best collection of $m$ columns from $\mathcal{L}{(D_0)}$ by  simulated annealing
   - A1<sub>L</sub>:
   - A2<sub>L</sub>
