@@ -3,7 +3,7 @@ This repository hosts the R code that implements ACE/LACE-based algorithms and r
 
 ## Folders
 - ACE/: R code of Algorithms 0-3
-  - A0
+  - A0: The best collection of $m$ columns from $\mathcal{E}{(D_0)}$ by  simulated annealing
   - A1
   - A2
   - A3
