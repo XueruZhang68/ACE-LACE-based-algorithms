@@ -48,8 +48,6 @@ This repository hosts the R code that implements ACE/LACE-based algorithms and r
  
   - RData of Figures S1-S2
     
-- figures/: R code for produing Figure 1-2 in the paper and Figure S1-S9 the supplementary material
-
 
 
 
