@@ -656,7 +656,7 @@ std::vector<std::vector<int>> maximinSLHD(int* mRow, int* Col, int* nslice, int*
     return result;
 }
 
-// 测试主函数
+// caculate average time
 int main() {
     int mRow = 100;       // 每片运行数
     int Col = 100;        // 因子数
@@ -668,26 +668,32 @@ int main() {
     int p = 1;
     double measure;
     double temp0 = 1;
+    
+    const int repeats = 50;
+    std::vector<double> times(repeats);
 
-    auto start = std::chrono::high_resolution_clock::now();
-    std::vector<std::vector<int>> design = maximinSLHD(&mRow, &Col, &nslice, &npower, &nstarts, &IterMax, &Total_Iter, &measure, &temp0);
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> duration = end - start;
-
-    std::cout << "Optimized design matrix:" << std::endl;
-    for (const auto& row : design) {
-        for (int val : row) {
-            std::cout << val << " ";
-        }
-        std::cout << std::endl;
+   for (int i = 0; i < repeats; ++i) {
+        auto start = std::chrono::high_resolution_clock::now();
+        std::vector<std::vector<int>> design = maximinSLHD(&mRow, &Col, &nslice, &npower, &nstarts, &IterMax, &Total_Iter, &measure, &temp0);
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> duration = end - start;
+        times[i] = duration.count();
     }
-    std::cout << "Execution time: " << duration.count() << " ms" << std::endl;
-    std::cout << "Measure (critbest): " << measure << std::endl;
-    std::cout << "Initial temperature (temp0): " << temp0 << std::endl;
-    std::cout << "Total iterations (itotal + itotal2): " << Total_Iter << std::endl;
-    std::cout << "L_2 value (p=" << p << "): " << L_2(design, p) << std::endl;
+   // average time
+    double total_time = 0.0;
+    for (double t : times) {
+        total_time += t;
+    }
+    double average_time = total_time / repeats;
+
+    std::cout << "\nAverage execution time over " << repeats << " runs: " << average_time << " ms" << std::endl;
+
     return 0;
 }
+
+
+
+
 
 
 
