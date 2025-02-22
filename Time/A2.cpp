@@ -2,7 +2,11 @@
 #include <vector>
 #include <random>
 #include <algorithm>
+#include <cmath>
 #include <chrono>
+
+#define Min(a, b) ((a < b) ? a : b)
+#define Max(a, b) ((a > b) ? a : b)
 
 int gcd(int a, int b) {
     while (b != 0) {
@@ -143,185 +147,329 @@ std::vector<std::vector<int>> column_bind(const std::vector<std::vector<int>>& D
     return result;
 }
 
-// SA_leave_one_out_half_naive_combined 函数
-std::vector<std::vector<int>> SA_leave_one_out_half_naive_combined(int N, int S, double T, int p, int total, double r, int nn, std::vector<int> column_optimal) {
-    // 生成 D
-    std::vector<int> euler = Euler(N);
-    std::vector<int> com1((N + 1) / 2 - 1);
-    for (int i = 0; i < com1.size(); ++i) {
-        com1[i] = i; // 0-based，从 0 到 (N+1)/2-2
+// Translated construction_leave_one_out function
+std::vector<std::vector<int>> construction_leave_one_out(int SetN) {
+    std::vector<int> aa = Euler(SetN); // aa的大小为φ(SetN)
+    std::vector<std::vector<int>> D = GLP(SetN, aa); // D为SetN × φ(SetN)
+    int ncol = aa.size(); // D的列数
+    // D1的列数变为SetN × ncol
+    std::vector<std::vector<int>> D1(SetN, std::vector<int>(SetN * ncol, 0));
+    
+    for (int j = 0; j < SetN; ++j) {
+        std::vector<std::vector<int>> leveled = level(D, j); // leveled为SetN × ncol
+         // 将 level_result 中等于 n_rows 的元素替换为 com[j]
+        for (int i = 0; i < SetN; ++i) {
+            for (int k = 0; k < ncol; ++k) {
+                if (leveled[i][k] == SetN) {
+                    leveled[i][k] = j; // 替换为 com[j]
+                }
+            }
+        }
+        for (int i = 0; i < SetN; ++i) {
+            for (int k = 0; k < ncol; ++k) {
+                D1[i][j * ncol + k] = leveled[i][k]; // 取全部列
+            }
+        }
     }
-    std::vector<std::vector<int>> D = level_leave_one_out_com(GLP(N, euler), com1);
+    // Remove the last row (index SetN-1 in 0-based indexing)
+    D1.pop_back();
+    return D1;
+}
+
+std::vector<std::vector<int>> subset_columns(const std::vector<std::vector<int>>& D, const std::vector<int>& columns) {
     int n_rows = D.size();
-    int n_cols_D = D[0].size();
-
-    // 随机数生成器
-    std::random_device rd;
-    std::mt19937 gen(rd());
-
-    if (S < ((N + 1) * euler.size() / 2)) {
-        // 计算初始 value_optimal
-        std::vector<std::vector<int>> D_optimal(n_rows, std::vector<int>(S));
-        for (int i = 0; i < n_rows; ++i) {
-            for (int j = 0; j < S; ++j) {
-                D_optimal[i][j] = D[i][column_optimal[j]];
-            }
+    int n_cols = columns.size();
+    std::vector<std::vector<int>> result(n_rows, std::vector<int>(n_cols));
+    for (int i = 0; i < n_rows; ++i) {
+        for (int j = 0; j < n_cols; ++j) {
+            result[i][j] = D[i][columns[j]];
         }
-        double value_optimal = L_2(D_optimal, p) / std::floor(std::pow((N - 1) / 2.0, p - 1) * N * S / 3.0);
+    }
+    return result;
+}
 
-        // 模拟退火迭代
-        for (int i = nn; i < total; ++i) {
-            // 获取剩余列
-            std::vector<int> remaining_cols;
-            int total_cols = (N + 1) * euler.size() / 2;
-            for (int col = 0; col < total_cols; ++col) {
-                if (std::find(column_optimal.begin(), column_optimal.end(), col) == column_optimal.end()) {
-                    remaining_cols.push_back(col);
+// SA_leave_one_out_naive function
+std::vector<std::vector<int>> SA_leave_one_out_naive(int N, int S, double T, int p, int total, double r) {
+    std::vector<int> aa = Euler(N);
+    int total_columns = N * aa.size();
+
+    if (S < total_columns) {
+        // Compute D
+        std::vector<std::vector<int>> D = construction_leave_one_out(N);
+
+        // Random number generation setup
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<> dis(0.0, 1.0);
+
+        // Initial column selection
+        std::vector<int> all_columns(total_columns);
+        for (int i = 0; i < total_columns; ++i) {
+            all_columns[i] = i;
+        }
+        std::shuffle(all_columns.begin(), all_columns.end(), gen);
+        std::vector<int> column_optimal(all_columns.begin(), all_columns.begin() + S);
+
+        // Initial value
+        std::vector<std::vector<int>> D_optimal = subset_columns(D, column_optimal);
+        double normalization = std::floor(std::pow((N - 1) / 2.0, p - 1) * N * S / 3.0);
+        double value_optimal = L_2(D_optimal, p) / normalization;
+
+        // Simulated annealing loop
+        for (int i = 0; i < total; ++i) {
+            // Find remaining columns
+            std::vector<int> remaining_columns;
+            for (int j = 0; j < total_columns; ++j) {
+                if (std::find(column_optimal.begin(), column_optimal.end(), j) == column_optimal.end()) {
+                    remaining_columns.push_back(j);
                 }
             }
 
-            // 随机选择一个剩余列
-            std::uniform_int_distribution<> dis_remain(0, remaining_cols.size() - 1);
-            int try_column = remaining_cols[dis_remain(gen)];
+            // Sample one column from remaining
+            std::uniform_int_distribution<> dis_remaining(0, remaining_columns.size() - 1);
+            int try_column = remaining_columns[dis_remaining(gen)];
 
-            // 随机替换 column_optimal 中的一列
+            // Create column_try by replacing one column
             std::vector<int> column_try = column_optimal;
             std::uniform_int_distribution<> dis_optimal(0, S - 1);
-            int replace_idx = dis_optimal(gen);
-            column_try[replace_idx] = try_column;
+            column_try[dis_optimal(gen)] = try_column;
 
-            // 计算 value_try
-            std::vector<std::vector<int>> D_try(n_rows, std::vector<int>(S));
-            for (int r = 0; r < n_rows; ++r) {
-                for (int c = 0; c < S; ++c) {
-                    D_try[r][c] = D[r][column_try[c]];
-                }
-            }
-            double value_try = L_2(D_try, p) / std::floor(std::pow((N - 1) / 2.0, p - 1) * N * S / 3.0);
+            // Compute new value
+            std::vector<std::vector<int>> D_try = subset_columns(D, column_try);
+            double value_try = L_2(D_try, p) / normalization;
 
-            // 模拟退火决策
+            // Acceptance criterion
             if (value_try > value_optimal) {
                 column_optimal = column_try;
                 value_optimal = value_try;
             } else {
-                std::uniform_real_distribution<> dis_prob(0, 1);
                 double prob = std::exp((value_try - value_optimal) / T);
-                if (prob > dis_prob(gen)) {
+                if (prob > dis(gen)) {
                     column_optimal = column_try;
                     value_optimal = value_try;
                 }
             }
 
-            // 更新温度
+            // Update temperature
             T *= r;
         }
 
-        // 返回优化后的子矩阵
-        std::vector<std::vector<int>> result(n_rows, std::vector<int>(S));
-        for (int i = 0; i < n_rows; ++i) {
-            for (int j = 0; j < S; ++j) {
-                result[i][j] = D[i][column_optimal[j]];
-            }
-        }
-        return result;
+        return subset_columns(D, column_optimal);
     } else {
-        // 生成 D1
-        std::vector<int> com2(N - 1 - (N + 1) / 2 + 1);
-        for (int i = 0; i < com2.size(); ++i) {
-            com2[i] = (N + 1) / 2 + i; // 从 (N+1)/2 到 N-1
-        }
-        std::vector<std::vector<int>> D1 = level_leave_one_out_com(GLP(N, euler), com2);
-        int n_cols_D1 = D1[0].size();
+        return construction_leave_one_out(N);
+    }
+}
 
-        // 计算初始 value_optimal
-        std::vector<std::vector<int>> D1_optimal(n_rows, std::vector<int>(S));
-        for (int i = 0; i < n_rows; ++i) {
-            for (int j = 0; j < S; ++j) {
-                D1_optimal[i][j] = D1[i][column_optimal[j]];
-            }
-        }
-        std::vector<std::vector<int>> combined_D = column_bind(D, D1_optimal); // 使用 column_bind 替代 cbind
-        double value_optimal = L_2(combined_D, p) / std::floor(std::pow((N - 1) / 2.0, p - 1) * N * S / 3.0);
 
-        // 模拟退火迭代
-        for (int i = nn; i < total; ++i) {
-            // 获取剩余列
-            std::vector<int> remaining_cols;
-            int total_cols = (N - 1) * euler.size() / 2;
-            for (int col = 0; col < n_cols_D1; ++col) {
-                if (std::find(column_optimal.begin(), column_optimal.end(), col) == column_optimal.end()) {
-                    remaining_cols.push_back(col);
+// New function: SA_leave_one_out_naive_combined
+std::vector<std::vector<int>> SA_leave_one_out_naive_combined(int N, int S, double T, int p, int total, double r, int nn, std::vector<int> column_optimal) {
+    std::vector<int> aa = Euler(N);
+    int total_columns = N * aa.size();
+
+    if (S < total_columns) {
+        // Compute D
+        std::vector<std::vector<int>> D = construction_leave_one_out(N);
+
+        // Random number generation setup
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<> dis(0.0, 1.0);
+
+        // Initial value using provided column_optimal
+        std::vector<std::vector<int>> D_optimal = subset_columns(D, column_optimal);
+        double normalization = std::floor(std::pow((N - 1) / 2.0, p - 1) * N * S / 3.0);
+        double value_optimal = L_2(D_optimal, p) / normalization;
+
+        // Simulated annealing loop starting from nn
+        for (int i = nn; i <= total; ++i) {
+            // Find remaining columns
+            std::vector<int> remaining_columns;
+            for (int j = 0; j < total_columns; ++j) {
+                if (std::find(column_optimal.begin(), column_optimal.end(), j) == column_optimal.end()) {
+                    remaining_columns.push_back(j);
                 }
             }
 
-            // 随机选择一个剩余列
-            std::uniform_int_distribution<> dis_remain(0, remaining_cols.size() - 1);
-            int try_column = remaining_cols[dis_remain(gen)];
+            // Sample one column from remaining
+            std::uniform_int_distribution<> dis_remaining(0, remaining_columns.size() - 1);
+            int try_column = remaining_columns[dis_remaining(gen)];
 
-            // 随机替换 column_optimal 中的一列
+            // Create column_try by replacing one column
             std::vector<int> column_try = column_optimal;
             std::uniform_int_distribution<> dis_optimal(0, S - 1);
-            int replace_idx = dis_optimal(gen);
-            column_try[replace_idx] = try_column;
+            column_try[dis_optimal(gen)] = try_column;
 
-            // 计算 value_try
-            std::vector<std::vector<int>> D1_try(n_rows, std::vector<int>(S));
-            for (int r = 0; r < n_rows; ++r) {
-                for (int c = 0; c < S; ++c) {
-                    D1_try[r][c] = D1[r][column_try[c]];
-                }
-            }
-            std::vector<std::vector<int>> combined_D_try = column_bind(D, D1_try); // 使用 column_bind 替代 cbind
-            double value_try = L_2(combined_D_try, p) / std::floor(std::pow((N - 1) / 2.0, p - 1) * N * S / 3.0);
+            // Compute new value
+            std::vector<std::vector<int>> D_try = subset_columns(D, column_try);
+            double value_try = L_2(D_try, p) / normalization;
 
-            // 模拟退火决策
+            // Acceptance criterion
             if (value_try > value_optimal) {
                 column_optimal = column_try;
                 value_optimal = value_try;
             } else {
-                std::uniform_real_distribution<> dis_prob(0, 1);
                 double prob = std::exp((value_try - value_optimal) / T);
-                if (prob > dis_prob(gen)) {
+                if (prob > dis(gen)) {
                     column_optimal = column_try;
                     value_optimal = value_try;
                 }
             }
 
-            // 更新温度
+            // Update temperature
             T *= r;
         }
 
-        // 返回优化后的子矩阵
-        std::vector<std::vector<int>> D1_result(n_rows, std::vector<int>(S));
-        for (int i = 0; i < n_rows; ++i) {
-            for (int j = 0; j < S; ++j) {
-                D1_result[i][j] = D1[i][column_optimal[j]];
+        return subset_columns(D, column_optimal);
+    } else {
+        return construction_leave_one_out(N);
+    }
+}
+
+// Helper function to compute variance
+double variance(const std::vector<double>& values) {
+    double mean = std::accumulate(values.begin(), values.end(), 0.0) / values.size();
+    double sum_sq_diff = 0.0;
+    for (double value : values) {
+        sum_sq_diff += (value - mean) * (value - mean);
+    }
+    return sum_sq_diff / (values.size() - 1);
+}
+
+// New function: SA_leave_one_out_ACE_combined
+std::vector<std::vector<int>> SA_leave_one_out_ACE_combined(int N, int S, double T, int p, int total, double r, int step, double delta) {
+    std::vector<int> aa = Euler(N);
+    int phi_N = aa.size();
+
+    if (S < phi_N) {
+        return SA_leave_one_out_naive(N, S, T, p, total, r);
+    } else {
+        int m = S / phi_N;
+        int K = S % phi_N;
+        std::vector<std::vector<int>> D = GLP(N, aa);
+
+        if (m < N) {
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_real_distribution<> dis(0.0, 1.0);
+
+            // Step 2: Initial U_optimal
+            std::vector<int> U_0(N);
+            for (int i = 0; i < N; ++i) {
+                U_0[i] = i + 1; // 1-based indices
             }
+            std::shuffle(U_0.begin(), U_0.end(), gen);
+            std::vector<int> U_optimal(U_0.begin(), U_0.begin() + m);
+
+            // Initial column_optimal
+            std::vector<int> all_columns((N - m) * phi_N);
+            for (int i = 0; i < (N - m) * phi_N; ++i) {
+                all_columns[i] = i;
+            }
+            std::shuffle(all_columns.begin(), all_columns.end(), gen);
+            std::vector<int> column_optimal(all_columns.begin(), all_columns.begin() + K);
+
+            // Compute remaining indices
+            std::vector<int> U_remaining;
+            for (int i = 0; i < N; ++i) {
+                if (std::find(U_optimal.begin(), U_optimal.end(), U_0[i]) == U_optimal.end()) {
+                    U_remaining.push_back(U_0[i]);
+                }
+            }
+
+            // Initial value_optimal
+            std::vector<int> U_optimal_minus_1 = U_optimal;
+            for (int& u : U_optimal_minus_1) u -= 1; // Convert to 0-based
+            std::vector<int> U_remaining_minus_1 = U_remaining;
+            for (int& u : U_remaining_minus_1) u -= 1;
+            std::vector<std::vector<int>> D1 = level_leave_one_out_com(D, U_optimal_minus_1);
+            std::vector<std::vector<int>> D2 = subset_columns(level_leave_one_out_com(D, U_remaining_minus_1), column_optimal);
+            std::vector<std::vector<int>> Target = column_bind(D1, D2);
+            double normalization = std::floor(std::pow((N - 1) / 2.0, p - 1) * N * S / 3.0);
+            double value_optimal = L_2(Target, p) / normalization;
+
+            // Value history
+            std::vector<double> value(step, value_optimal);
+            int iiii = 0;
+
+            // SA loop
+            while (variance(value) > delta && iiii <= total) {
+                // Perturb U_try
+                std::vector<int> U_try = U_optimal;
+                std::uniform_int_distribution<> dis_optimal(0, m - 1);
+                std::uniform_int_distribution<> dis_remaining(0, U_remaining.size() - 1);
+                int idx_opt = dis_optimal(gen);
+                int idx_rem = dis_remaining(gen);
+                U_try[idx_opt] = U_remaining[idx_rem];
+
+                // New column_try
+                std::shuffle(all_columns.begin(), all_columns.end(), gen);
+                std::vector<int> column_try(all_columns.begin(), all_columns.begin() + K);
+
+                // Compute value_try
+                std::vector<int> U_try_minus_1 = U_try;
+                for (int& u : U_try_minus_1) u -= 1;
+                std::vector<int> U_remaining_try;
+                for (int i = 0; i < N; ++i) {
+                    if (std::find(U_try.begin(), U_try.end(), U_0[i]) == U_try.end()) {
+                        U_remaining_try.push_back(U_0[i]);
+                    }
+                }
+                std::vector<int> U_remaining_try_minus_1 = U_remaining_try;
+                for (int& u : U_remaining_try_minus_1) u -= 1;
+                D1 = level_leave_one_out_com(D, U_try_minus_1);
+                D2 = subset_columns(level_leave_one_out_com(D, U_remaining_try_minus_1), column_try);
+                std::vector<std::vector<int>> Target_try = column_bind(D1, D2);
+                double value_try = L_2(Target_try, p) / normalization;
+
+                // Acceptance criterion
+                if (value_try > value_optimal) {
+                    column_optimal = column_try;
+                    U_optimal = U_try;
+                    U_remaining = U_remaining_try;
+                    value_optimal = value_try;
+                    Target = Target_try;
+                } else {
+                    double prob = std::exp((value_try - value_optimal) / T);
+                    if (prob > dis(gen)) {
+                        column_optimal = column_try;
+                        U_optimal = U_try;
+                        U_remaining = U_remaining_try;
+                        value_optimal = value_try;
+                        Target = Target_try;
+                    }
+                }
+
+                // Update value history
+                value.erase(value.begin());
+                value.push_back(value_optimal);
+                T *= r;
+                iiii++;
+            }
+
+            // Early termination handling
+            if (iiii < total) {
+                std::vector<int> new_column_optimal;
+                for (int x : U_optimal) {
+                    int start = (x - 1) * phi_N;
+                    for (int j = start; j < start + phi_N; ++j) {
+                        new_column_optimal.push_back(j);
+                    }
+                }
+                if (!column_optimal.empty()) {
+                    for (int x : column_optimal) {
+                        int col = x % phi_N;
+                        if (col == 0) col = phi_N;
+                        int row_idx = (x - 1) / phi_N + 1;
+                        int h = col + (U_remaining[row_idx] - 1) * phi_N - 1;
+                        new_column_optimal.push_back(h);
+                    }
+                }
+                return SA_leave_one_out_naive_combined(N, S, T, p, total, r, iiii + 1, new_column_optimal);
+            }
+            return Target;
+        } else {
+            return construction_leave_one_out(N);
         }
-        return column_bind(D, D1_result); // 使用 column_bind 替代 cbind
     }
 }
 
-// 测试主函数
-int main() {
-    int N = 5;
-    int S = 2;
-    double T = 1.0;
-    int p = 2;
-    int total = 1000;
-    double r = 0.99;
-    int nn = 0;
-    std::vector<int> column_optimal = {0, 1}; // 初始 column_optimal
-
-    std::vector<std::vector<int>> result = SA_leave_one_out_half_naive_combined(N, S, T, p, total, r, nn, column_optimal);
-
-    std::cout << "Optimized matrix:" << std::endl;
-    for (const auto& row : result) {
-        for (int val : row) {
-            std::cout << val << " ";
-        }
-        std::cout << std::endl;
-    }
-
-    return 0;
-}
