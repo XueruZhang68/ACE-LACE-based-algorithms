@@ -658,7 +658,7 @@ std::vector<std::vector<int>> maximinSLHD(int* mRow, int* Col, int* nslice, int*
 
 // caculate average time
 int main() {
-    int mRow = 100;       // 每片运行数
+    int mRow = 1000;       // 每片运行数
     int Col = 100;        // 因子数
     int nslice = 1;     // 片数
     int npower = 15;     // L_p幂次
@@ -679,14 +679,21 @@ int main() {
         std::chrono::duration<double, std::milli> duration = end - start;
         times[i] = duration.count();
     }
-   // average time
+  // 计算最大、最小和平均时间
     double total_time = 0.0;
+    double min_time = times[0];
+    double max_time = times[0];
     for (double t : times) {
         total_time += t;
+        min_time = std::min(min_time, t);
+        max_time = std::max(max_time, t);
     }
     double average_time = total_time / repeats;
 
-    std::cout << "\nAverage execution time over " << repeats << " runs: " << average_time << " ms" << std::endl;
+    std::cout << "\nResults over " << repeats << " runs:" << std::endl;
+    std::cout << "Maximum execution time: " << max_time << " ms" << std::endl;
+    std::cout << "Minimum execution time: " << min_time << " ms" << std::endl;
+    std::cout << "Average execution time: " << average_time << " ms" << std::endl;
 
     return 0;
 }
