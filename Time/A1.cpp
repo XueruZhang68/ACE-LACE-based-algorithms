@@ -483,18 +483,35 @@ int main() {
     double r = 0.95;
     int step =10;
     double delta = 0.001;
-    
-    std::vector<int> column_optimal = {0, 1}; // 初始 column_optimal
+    const int repeats = 50;
 
-    std::vector<std::vector<int>> result =  SA_leave_one_out_ACE_combined(N, S, T, p, total, r, step, delta);
+    std::vector<double> times(repeats);
 
-    std::cout << "Optimized matrix:" << std::endl;
-    for (const auto& row : result) {
-        for (int val : row) {
-            std::cout << val << " ";
-        }
-        std::cout << std::endl;
+   for (int i = 0; i < repeats; ++i) {
+       auto start = std::chrono::high_resolution_clock::now();
+        std::vector<std::vector<int>> design =  SA_leave_one_out_ACE_combined(N, S, T, p, total, r, step, delta);
+       auto end = std::chrono::high_resolution_clock::now();
+       std::chrono::duration<double, std::milli> duration = end - start;
+       times[i] = duration.count();
     }
+
+     // 计算最大、最小和平均时间
+    double total_time = 0.0;
+    double min_time = times[0];
+    double max_time = times[0];
+    for (double t : times) {
+        total_time += t;
+        min_time = std::min(min_time, t);
+        max_time = std::max(max_time, t);
+    }
+    double average_time = total_time / repeats;
+
+    std::cout << "\nResults over " << repeats << " runs:" << std::endl;
+    std::cout << "Maximum execution time: " << max_time << " ms" << std::endl;
+    std::cout << "Minimum execution time: " << min_time << " ms" << std::endl;
+    std::cout << "Average execution time: " << average_time << " ms" << std::endl;
 
     return 0;
 }
+
+
