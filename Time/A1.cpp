@@ -473,3 +473,28 @@ std::vector<std::vector<int>> SA_leave_one_out_ACE_combined(int N, int S, double
     }
 }
 
+// 测试主函数
+int main() {
+    int N = 5;
+    int S = 10;
+    double T = 1.0;
+    int p = 1;
+    int total = 500;
+    double r = 0.95;
+    int step =10;
+    double delta = 0.001;
+    
+    std::vector<int> column_optimal = {0, 1}; // 初始 column_optimal
+
+    std::vector<std::vector<int>> result =  SA_leave_one_out_ACE_combined(N, S, T, p, total, r, step, delta);
+
+    std::cout << "Optimized matrix:" << std::endl;
+    for (const auto& row : result) {
+        for (int val : row) {
+            std::cout << val << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    return 0;
+}
