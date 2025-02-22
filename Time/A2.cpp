@@ -56,6 +56,43 @@ std::vector<std::vector<int>> level(const std::vector<std::vector<int>>& D, int 
     return y;
 }
 
+// level_leave_one_out_com 函数
+std::vector<std::vector<int>> level_leave_one_out_com(const std::vector<std::vector<int>>& D, const std::vector<int>& com) {
+    int n_rows = D.size();
+    if (n_rows == 0) return {};
+    int n_cols_D = D[0].size(); // D 的列数
+    int n_cols_com = com.size(); // com 的长度
+    
+    // 初始化 D1，每列来自 level(D, com[j]) 的结果，列数为 n_cols_D * n_cols_com
+    std::vector<std::vector<int>> D1(n_rows, std::vector<int>(n_cols_D * n_cols_com));
+    
+    // 遍历 com 的每个元素
+    for (int j = 0; j < n_cols_com; ++j) {
+        // 对整个矩阵 D 应用 level 函数
+        std::vector<std::vector<int>> level_result = level(D, com[j]);
+        
+        // 将 level_result 中等于 n_rows 的元素替换为 com[j]
+        for (int i = 0; i < n_rows; ++i) {
+            for (int k = 0; k < n_cols_D; ++k) {
+                if (level_result[i][k] == n_rows) {
+                    level_result[i][k] = com[j]; // 替换为 com[j]
+                }
+            }
+        }
+        
+        // 将修改后的 level_result 填入 D1 的对应位置
+        for (int i = 0; i < n_rows; ++i) {
+            for (int k = 0; k < n_cols_D; ++k) {
+                D1[i][j * n_cols_D + k] = level_result[i][k];
+            }
+        }
+    }
+    
+    // 移除最后一行
+    D1.pop_back();
+    
+    return D1;
+}
 
 std::vector<std::vector<int>> construction(int SetN) {
     std::vector<int> aa = Euler(SetN); // aa的大小为φ(SetN)
