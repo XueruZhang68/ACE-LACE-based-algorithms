@@ -1,0 +1,693 @@
+#include <iostream>
+#include <vector>
+#include <random>
+#include <algorithm>
+#include <cmath>
+#include <chrono>
+
+#define Min(a, b) ((a < b) ? a : b)
+#define Max(a, b) ((a > b) ? a : b)
+
+// 随机选择函数替代R的rc，使用固定种子
+int rc(int n, std::mt19937& gen) {
+    std::uniform_int_distribution<> dis(0, n - 1);
+    return dis(gen);
+}
+//L_2
+double L_2(const std::vector<std::vector<int>>& D, int p) {
+    int N = D.size();
+    std::vector<double> min_values;
+    for (int x = 0; x < N - 2; ++x) {
+        double min_dist = -1;
+        for (int i = x + 1; i < N; ++i) {
+            double sum = 0;
+            for (int j = 0; j < D[0].size(); ++j) {
+                sum += std::pow(std::abs(D[i][j] - D[x][j]), p);
+            }
+            if (min_dist < 0 || sum < min_dist) {
+                min_dist = sum;
+            }
+        }
+        min_values.push_back(min_dist);
+    }
+    double last_dist = 0;
+    for (int j = 0; j < D[0].size(); ++j) {
+        last_dist += std::pow(std::abs(D[N-1][j] - D[N-2][j]), p);
+    }
+    min_values.push_back(last_dist);
+
+    double min_val = min_values[0];
+    for (double val : min_values) {
+        if (val < min_val) {
+            min_val = val;
+        }
+    }
+    return min_val;
+}
+
+// 随机选择除外del的替代rc2，使用固定种子
+int rc2(int n, int del, std::mt19937& gen) {
+    std::uniform_int_distribution<> dis(0, n - 2);
+    int r = dis(gen);
+    if (r >= del) r++;
+    return r;
+}
+
+// LHD 函数
+int** LHD(int n, int k, std::mt19937& gen) {
+    int** LHD = new int*[k];
+    int* r = new int[n];
+    for (int i = 0; i < k; ++i) {
+        LHD[i] = new int[n];
+    }
+    for (int j2 = 0; j2 < n; ++j2) {
+        LHD[0][j2] = j2 + 1;
+    }
+    for (int j1 = 0; j1 < k - 1; ++j1) {
+        for (int cc = 0; cc < n; ++cc) {
+            r[cc] = cc + 1;
+        }
+        for (int c = 0; c < n; ++c) {
+            int te = rc(n - c, gen);
+            LHD[j1 + 1][c] = r[te];
+            for (int c1 = 0; c1 < n - c - 1; ++c1) {
+                if (c1 >= te) {
+                    r[c1] = r[c1 + 1];
+                }
+            }
+        }
+    }
+    delete[] r;
+    return LHD;
+}
+
+// SLHD 函数
+int** SLHD(int m, int t, int k, std::mt19937& gen) {
+    int n = m * t;
+    int** SLHD = new int*[k];
+    int* r = new int[m];
+    for (int i = 0; i < k; ++i) {
+        SLHD[i] = new int[n];
+    }
+    for (int js = 0; js < t; ++js) {
+        for (int j2 = 0; j2 < m; ++j2) {
+            SLHD[0][m * js + j2] = j2 + 1;
+        }
+    }
+    for (int j1 = 0; j1 < k - 1; ++j1) {
+        for (int jss = 0; jss < t; ++jss) {
+            for (int cc = 0; cc < m; ++cc) {
+                r[cc] = cc + 1;
+            }
+            for (int c = 0; c < m; ++c) {
+                int te = rc(m - c, gen);
+                SLHD[j1 + 1][jss * m + c] = r[te];
+                for (int c1 = 0; c1 < m - c - 1; ++c1) {
+                    if (c1 >= te) {
+                        r[c1] = r[c1 + 1];
+                    }
+                }
+            }
+        }
+    }
+    int** SLHDS = new int*[k];
+    for (int i = 0; i < k; ++i) {
+        SLHDS[i] = new int[n];
+    }
+    int xsubs;
+    for (int j3 = 0; j3 < k; ++j3) {
+        for (int j5 = 0; j5 < m; ++j5) {
+            xsubs = j5 * t + 1;
+            for (int j4 = 0; j4 < n; ++j4) {
+                if (SLHD[j3][j4] == j5 + 1) {
+                    SLHDS[j3][j4] = xsubs;
+                    xsubs++;
+                }
+            }
+        }
+    }
+    for (int i = 0; i < k; ++i) {
+        delete[] SLHD[i];
+    }
+    delete[] SLHD;
+    delete[] r;
+    return SLHDS;
+}
+
+// 距离矩阵计算
+void distmatrix(int** A, int n, int k, double* d) {
+    int dim = (int)(n * (n - 1) * 0.5);
+    for (int i = 0; i < dim; ++i) {
+        d[i] = 0;
+    }
+    int count = 0;
+    for (int k1 = 0; k1 < n - 1; ++k1) {
+        for (int k2 = k1 + 1; k2 < n; ++k2) {
+            for (int k3 = 0; k3 < k; ++k3) {
+                d[count] += pow((double)(A[k3][k1] - A[k3][k2]), 2);
+            }
+            d[count] = pow(d[count], 0.5);
+            count++;
+        }
+    }
+}
+
+// 平均倒数距离
+void avgdist(int n, int p, double* d, double* avgdist_cur) {
+    int dim = (int)(n * (n - 1) * 0.5);
+    double avgdist = 0;
+    for (int i = 0; i < dim; ++i) {
+        avgdist += pow(d[i], -p);
+    }
+    avgdist = avgdist * pow((double)dim, -1);
+    *avgdist_cur = pow(avgdist, pow((double)p, -1));
+}
+
+// 组合平均倒数距离
+double combavgdist(int m, int t, int p, double* d, double* avgdist_slice, double* avgdist_cur) {
+    if (t > 1) {
+        int dim_slice = (int)(m * (m - 1) * 0.5);
+        int n = m * t;
+        double combavgdist = 0;
+        for (int i = 0; i < t; ++i) {
+            avgdist_slice[i] = 0;
+        }
+        int count = 0;
+        for (int ns = 0; ns < t; ++ns) {
+            for (int nn1 = ns * m; nn1 < (ns + 1) * m - 1; ++nn1) {
+                for (int nn2 = nn1 + 1; nn2 < (ns + 1) * m; ++nn2) {
+                    count = (int)(nn2 + 1 - 0.5 * pow(nn1 + 1, 2) + (n - 0.5) * (nn1 + 1) - n - 1);
+                    avgdist_slice[ns] += pow(d[count], -p);
+                }
+            }
+            avgdist_slice[ns] = avgdist_slice[ns] * pow((double)dim_slice, -1);
+            avgdist_slice[ns] = pow(avgdist_slice[ns], pow((double)p, -1));
+        }
+        for (int iii = 0; iii < t; ++iii) {
+            combavgdist += avgdist_slice[iii];
+        }
+        avgdist(n, p, d, avgdist_cur);
+        combavgdist = (*avgdist_cur + combavgdist * pow((double)t, -1)) * pow(2.0, -1);
+        return combavgdist;
+    } else {
+        int n = m * t;
+        double combavgdist = 0;
+        avgdist(n, p, d, avgdist_cur);
+        combavgdist = *avgdist_cur;
+        return combavgdist;
+    }
+}
+
+// 更新距离矩阵
+void update_distmatrix(int** A, int n, int col, int selrow1, int selrow2, double* d, double* d_old) {
+    int row1 = Min(selrow1, selrow2);
+    int row2 = Max(selrow1, selrow2);
+    double s = 0;
+    int position1, position2;
+
+    if (row1 > 0) {
+        for (int h = 0; h < row1; ++h) {
+            s = pow((double)(A[col][row2] - A[col][h]), 2) - pow((double)(A[col][row1] - A[col][h]), 2);
+            position1 = (int)(row1 + 1 - pow(h + 1, 2) * 0.5 + (n - 0.5) * (h + 1) - n - 1);
+            position2 = (int)(row2 + 1 - pow(h + 1, 2) * 0.5 + (n - 0.5) * (h + 1) - n - 1);
+            d_old[position1] = d[position1];
+            d_old[position2] = d[position2];
+            d[position1] = pow(pow(d[position1], 2) - s, 0.5);
+            d[position2] = pow(pow(d[position2], 2) + s, 0.5);
+        }
+    }
+    for (int h = row1 + 1; h < row2; ++h) {
+        s = pow((double)(A[col][row2] - A[col][h]), 2) - pow((double)(A[col][row1] - A[col][h]), 2);
+        position1 = (int)(h + 1 - pow(row1 + 1, 2) * 0.5 + (n - 0.5) * (row1 + 1) - n - 1);
+        position2 = (int)(row2 + 1 - pow(h + 1, 2) * 0.5 + (n - 0.5) * (h + 1) - n - 1);
+        d_old[position1] = d[position1];
+        d_old[position2] = d[position2];
+        d[position1] = pow(pow(d[position1], 2) - s, 0.5);
+        d[position2] = pow(pow(d[position2], 2) + s, 0.5);
+    }
+    if (row2 < n - 1) {
+        for (int h = row2 + 1; h < n; ++h) {
+            s = pow((double)(A[col][row2] - A[col][h]), 2) - pow((double)(A[col][row1] - A[col][h]), 2);
+            position1 = (int)(h + 1 - pow(row1 + 1, 2) * 0.5 + (n - 0.5) * (row1 + 1) - n - 1);
+            position2 = (int)(h + 1 - pow(row2 + 1, 2) * 0.5 + (n - 0.5) * (row2 + 1) - n - 1);
+            d_old[position1] = d[position1];
+            d_old[position2] = d[position2];
+            d[position1] = pow(pow(d[position1], 2) - s, 0.5);
+            d[position2] = pow(pow(d[position2], 2) + s, 0.5);
+        }
+    }
+}
+
+// 恢复距离矩阵
+void revert_distmatrix(int n, int selrow1, int selrow2, double* d, double* d_old) {
+    int row1 = Min(selrow1, selrow2);
+    int row2 = Max(selrow1, selrow2);
+    int position1, position2;
+
+    if (row1 > 0) {
+        for (int h = 0; h < row1; ++h) {
+            position1 = (int)(row1 + 1 - pow(h + 1, 2) * 0.5 + (n - 0.5) * (h + 1) - n - 1);
+            position2 = (int)(row2 + 1 - pow(h + 1, 2) * 0.5 + (n - 0.5) * (h + 1) - n - 1);
+            d[position1] = d_old[position1];
+            d[position2] = d_old[position2];
+        }
+    }
+    for (int h = row1 + 1; h < row2; ++h) {
+        position1 = (int)(h + 1 - pow(row1 + 1, 2) * 0.5 + (n - 0.5) * (row1 + 1) - n - 1);
+        position2 = (int)(row2 + 1 - pow(h + 1, 2) * 0.5 + (n - 0.5) * (h + 1) - n - 1);
+        d[position1] = d_old[position1];
+        d[position2] = d_old[position2];
+    }
+    if (row2 < n - 1) {
+        for (int h = row2 + 1; h < n; ++h) {
+            position1 = (int)(h + 1 - pow(row1 + 1, 2) * 0.5 + (n - 0.5) * (row1 + 1) - n - 1);
+            position2 = (int)(h + 1 - pow(row2 + 1, 2) * 0.5 + (n - 0.5) * (row2 + 1) - n - 1);
+            d[position1] = d_old[position1];
+            d[position2] = d_old[position2];
+        }
+    }
+}
+
+// 更新平均倒数距离
+void update_avgdist(int n, int p, int selrow1, int selrow2, double* d, double* d_old, double* avgdist_old, double* avgdist_cur) {
+    *avgdist_old = *avgdist_cur;
+    int dim = (int)(n * (n - 1) * 0.5);
+    double avgdist0 = 0;
+
+    for (int i = 0; i < dim; ++i) {
+        avgdist0 += pow(d[i], -p);
+    }
+    avgdist0 = avgdist0 * pow((double)dim, -1);
+    *avgdist_cur = pow(avgdist0, pow((double)p, -1));
+}
+
+// 更新切片平均倒数距离（Stage I）
+void update_avgdist_sliceI(int n, int m, int p, int translice, int tran1, int tran2, double* d, double* d_old, double* avgdist_slice, double* avgdist_slice_old) {
+    int dim_slice = (int)(m * (m - 1) * 0.5);
+    avgdist_slice_old[translice] = avgdist_slice[translice];
+
+    double sliceavgdist0 = 0;
+    int pos;
+    for (int nn2 = translice * m; nn2 < (translice * m + m - 1); ++nn2) {
+        for (int nn1 = nn2 + 1; nn1 < (translice * m + m); ++nn1) {
+            pos = nn1 + 1 - pow(nn2 + 1, 2) * 0.5 + (nn2 + 1) * (n - 0.5) - n - 1;
+            sliceavgdist0 += pow(d[pos], -p);
+        }
+    }
+    sliceavgdist0 = sliceavgdist0 * pow((double)dim_slice, -1);
+    sliceavgdist0 = pow(sliceavgdist0, pow((double)p, -1));
+    avgdist_slice[translice] = sliceavgdist0;
+}
+
+// 更新组合平均倒数距离（Stage I）
+double update_combavgdistI(int m, int t, int p, int translice, int tran1, int tran2, double* d, double* d_old, double* avgdist_slice, double* avgdist_slice_old, double* avgdist_old, double* avgdist_cur) {
+    if (t > 1) {
+        int n = m * t;
+        double combavgdist = 0;
+        update_avgdist_sliceI(n, m, p, translice, tran1, tran2, d, d_old, avgdist_slice, avgdist_slice_old);
+
+        int selrow1 = translice * m + tran1;
+        int selrow2 = translice * m + tran2;
+        update_avgdist(n, p, selrow1, selrow2, d, d_old, avgdist_old, avgdist_cur);
+
+        for (int iii = 0; iii < t; ++iii) {
+            combavgdist += avgdist_slice[iii];
+        }
+        combavgdist = (*avgdist_cur + combavgdist * pow((double)t, -1)) * pow(2.0, -1);
+        return combavgdist;
+    } else {
+        int n = m * t;
+        double combavgdist = 0;
+
+        int selrow1 = translice * m + tran1;
+        int selrow2 = translice * m + tran2;
+        update_avgdist(n, p, selrow1, selrow2, d, d_old, avgdist_old, avgdist_cur);
+
+        combavgdist = *avgdist_cur;
+        return combavgdist;
+    }
+}
+
+// 更新切片平均倒数距离（Stage II）
+void update_avgdist_sliceII(int n, int m, int p, int location1, int location2, double* d, double* d_old, double* avgdist_slice, double* avgdist_slice_old) {
+    int dim_slice = (int)(m * (m - 1) * 0.5);
+    int nslice1 = location1 / m;
+    int nslice2 = location2 / m;
+
+    avgdist_slice_old[nslice1] = avgdist_slice[nslice1];
+    avgdist_slice_old[nslice2] = avgdist_slice[nslice2];
+
+    double sliceavgdist01 = 0;
+    int pos;
+    for (int nn2 = nslice1 * m; nn2 < (nslice1 * m + m - 1); ++nn2) {
+        for (int nn1 = nn2 + 1; nn1 < (nslice1 * m + m); ++nn1) {
+            pos = nn1 + 1 - pow(nn2 + 1, 2) * 0.5 + (nn2 + 1) * (n - 0.5) - n - 1;
+            sliceavgdist01 += pow(d[pos], -p);
+        }
+    }
+    sliceavgdist01 = sliceavgdist01 * pow((double)dim_slice, -1);
+    sliceavgdist01 = pow(sliceavgdist01, pow((double)p, -1));
+    avgdist_slice[nslice1] = sliceavgdist01;
+
+    double sliceavgdist02 = 0;
+    for (int nn2 = nslice2 * m; nn2 < (nslice2 * m + m - 1); ++nn2) {
+        for (int nn1 = nn2 + 1; nn1 < (nslice2 * m + m); ++nn1) {
+            pos = nn1 + 1 - pow(nn2 + 1, 2) * 0.5 + (nn2 + 1) * (n - 0.5) - n - 1;
+            sliceavgdist02 += pow(d[pos], -p);
+        }
+    }
+    sliceavgdist02 = sliceavgdist02 * pow((double)dim_slice, -1);
+    sliceavgdist02 = pow(sliceavgdist02, pow((double)p, -1));
+    avgdist_slice[nslice2] = sliceavgdist02;
+}
+
+// 更新组合平均倒数距离（Stage II）
+double update_combavgdistII(int m, int t, int p, int location1, int location2, double* d, double* d_old, double* avgdist_slice, double* avgdist_slice_old, double* avgdist_old, double* avgdist_cur) {
+    int n = m * t;
+    double combavgdist = 0;
+    update_avgdist_sliceII(n, m, p, location1, location2, d, d_old, avgdist_slice, avgdist_slice_old);
+
+    update_avgdist(n, p, location1, location2, d, d_old, avgdist_old, avgdist_cur);
+
+    for (int iii = 0; iii < t; ++iii) {
+        combavgdist += avgdist_slice[iii];
+    }
+    combavgdist = (*avgdist_cur + combavgdist * pow((double)t, -1)) * pow(2.0, -1);
+    return combavgdist;
+}
+
+// 修改后的 maximinSLHD，返回 std::vector<std::vector<int>>
+std::vector<std::vector<int>> maximinSLHD(int* mRow, int* Col, int* nslice, int* npower, int* nstarts, int* IterMax, int* Total_Iter, double* measure, double* temp0) {
+    const int k = *Col;
+    const int m = *mRow;
+    const int t = *nslice;
+    const int n = m * t;
+    const int nsearch = *nstarts;
+    const int p = *npower;
+    const double tfac = 0.95;
+    const int Imax = *IterMax;
+    int nImax = Min(5 * n * (n - 1) * k, Imax);
+    int max_itotal = *Total_Iter;
+
+    int max_itotal1 = (t > 1) ? max_itotal * 0.75 : max_itotal;
+    int max_itotal2 = (t > 1) ? max_itotal * 0.25 : 0;
+
+    int ntotal = 0;
+    double t0;
+    double xcrit;
+    double critbest;
+    double crittry;
+    int itotal = 0;
+    int itotal2 = 0;
+    double temp;
+    int** xbest = new int*[k];
+    int** xtry = new int*[k];
+    int** x = new int*[k];
+    for (int i = 0; i < k; ++i) {
+        xbest[i] = new int[n];
+        xtry[i] = new int[n];
+        x[i] = new int[n];
+    }
+
+    int dim = (int)(n * (n - 1) * 0.5);
+    double* d = new double[dim];
+    double* d_old = new double[dim];
+    for (int i = 0; i < dim; ++i) {
+        d_old[i] = 0;
+    }
+
+    double* avgdist_cur = new double(0);
+    double* avgdist_old = new double(0);
+    double* avgdist_slice = new double[t];
+    double* avgdist_slice_old = new double[t];
+    for (int i = 0; i < t; ++i) {
+        avgdist_slice_old[i] = 0;
+    }
+
+    std::mt19937 gen(12345); // 固定种子以确保可复现性
+
+    int** temp_design = SLHD(m, t, k, gen);
+    for (int i = 0; i < k; ++i) {
+        for (int j = 0; j < n; ++j) {
+            xbest[i][j] = temp_design[i][j];
+        }
+    }
+    for (int i = 0; i < k; ++i) delete[] temp_design[i];
+    delete[] temp_design;
+
+    distmatrix(xbest, n, k, d);
+    critbest = combavgdist(m, t, p, d, avgdist_slice, avgdist_cur);
+
+    double avgd2 = k * n * (n + 1) * pow(6.0, -1);
+    double delta0 = pow(avgd2 - k, -0.5) - pow(avgd2, -0.5);
+    t0 = -delta0 * pow(log(0.99), -1);
+    *temp0 = t0;
+
+    itotal = 0;
+    for (int isearch = 1; isearch <= nsearch; ++isearch) {
+        temp_design = SLHD(m, t, k, gen);
+        for (int n2 = 0; n2 < k; ++n2) {
+            for (int n1 = 0; n1 < n; ++n1) {
+                x[n2][n1] = temp_design[n2][n1];
+                xtry[n2][n1] = temp_design[n2][n1];
+            }
+        }
+        for (int i = 0; i < k; ++i) delete[] temp_design[i];
+        delete[] temp_design;
+
+        distmatrix(xtry, n, k, d);
+        xcrit = combavgdist(m, t, p, d, avgdist_slice, avgdist_cur);
+        crittry = xcrit;
+
+        temp = t0;
+        int ichange = 1;
+        while (ichange == 1) {
+            ichange = 0;
+            int ipert = 1;
+            while (ipert < nImax) {
+                if (itotal > max_itotal1) break;
+                itotal++;
+
+                int ind = rc(k - 1, gen);
+                int translice = rc(t, gen);
+                int tran1 = rc(m, gen);
+                int tran2 = rc2(m, tran1, gen);
+
+                xtry[ind + 1][translice * m + tran2] = x[ind + 1][translice * m + tran1];
+                xtry[ind + 1][translice * m + tran1] = x[ind + 1][translice * m + tran2];
+
+                update_distmatrix(xtry, n, ind + 1, translice * m + tran1, translice * m + tran2, d, d_old);
+                crittry = update_combavgdistI(m, t, p, translice, tran1, tran2, d, d_old, avgdist_slice, avgdist_slice_old, avgdist_old, avgdist_cur);
+
+                if (crittry < critbest) {
+                    ichange = 1;
+                    for (int nn2 = 0; nn2 < k; ++nn2) {
+                        for (int nn1 = 0; nn1 < n; ++nn1) {
+                            xbest[nn2][nn1] = xtry[nn2][nn1];
+                        }
+                    }
+                    x[ind + 1][translice * m + tran1] = xtry[ind + 1][translice * m + tran1];
+                    x[ind + 1][translice * m + tran2] = xtry[ind + 1][translice * m + tran2];
+                    critbest = crittry;
+                    ipert = 1;
+                    xcrit = crittry;
+                } else {
+                    ipert++;
+                    if (crittry < xcrit) {
+                        x[ind + 1][translice * m + tran1] = xtry[ind + 1][translice * m + tran1];
+                        x[ind + 1][translice * m + tran2] = xtry[ind + 1][translice * m + tran2];
+                        ichange = 1;
+                        xcrit = crittry;
+                    } else {
+                        double delta1 = crittry - xcrit;
+                        double prob = exp(-delta1 * pow(temp, -1));
+                        std::uniform_real_distribution<> dis_prob(0, 1);
+                        double q = dis_prob(gen);
+                        if (prob >= q) {
+                            x[ind + 1][translice * m + tran1] = xtry[ind + 1][translice * m + tran1];
+                            x[ind + 1][translice * m + tran2] = xtry[ind + 1][translice * m + tran2];
+                            xcrit = crittry;
+                        } else {
+                            xtry[ind + 1][translice * m + tran1] = x[ind + 1][translice * m + tran1];
+                            xtry[ind + 1][translice * m + tran2] = x[ind + 1][translice * m + tran2];
+                            revert_distmatrix(n, translice * m + tran1, translice * m + tran2, d, d_old);
+                            *avgdist_cur = *avgdist_old;
+                            avgdist_slice[translice] = avgdist_slice_old[translice];
+                        }
+                    }
+                }
+            }
+            temp *= tfac;
+        }
+    }
+
+    if (t > 1) {
+        int** lmatrix = new int*[k];
+        for (int i = 0; i < k; ++i) {
+            lmatrix[i] = new int[n];
+        }
+        int* loc = new int[m];
+        itotal2 = 0;
+
+        for (int ck = 0; ck < k; ++ck) {
+            for (int iii = 0; iii < m; ++iii) {
+                loc[iii] = 0;
+            }
+            for (int cn = 0; cn < n; ++cn) {
+                for (int cm = 0; cm < m; ++cm) {
+                    if ((cm * t + 1 <= xbest[ck][cn]) && (xbest[ck][cn] <= (cm + 1) * t)) {
+                        lmatrix[ck][cm * t + loc[cm]] = cn;
+                        loc[cm]++;
+                    }
+                }
+            }
+        }
+
+        temp = t0;
+        int ichange = 1;
+        for (int nn2 = 0; nn2 < k; ++nn2) {
+            for (int nn1 = 0; nn1 < n; ++nn1) {
+                x[nn2][nn1] = xbest[nn2][nn1];
+                xtry[nn2][nn1] = xbest[nn2][nn1];
+            }
+        }
+        distmatrix(x, n, k, d);
+        xcrit = combavgdist(m, t, p, d, avgdist_slice, avgdist_cur);
+
+        while (ichange == 1) {
+            ichange = 0;
+            int ipert = 1;
+            while (ipert < nImax) {
+                if (itotal2 > max_itotal2) break;
+                itotal2++;
+
+                int ind = rc(k, gen);
+                int tranm = rc(m, gen);
+                int tran1 = rc(t, gen);
+                int tran2 = rc2(t, tran1, gen);
+
+                int location1 = lmatrix[ind][tranm * t + tran1];
+                int location2 = lmatrix[ind][tranm * t + tran2];
+
+                xtry[ind][location2] = x[ind][location1];
+                xtry[ind][location1] = x[ind][location2];
+
+                update_distmatrix(xtry, n, ind, location1, location2, d, d_old);
+                crittry = update_combavgdistII(m, t, p, location1, location2, d, d_old, avgdist_slice, avgdist_slice_old, avgdist_old, avgdist_cur);
+
+                if (crittry < critbest) {
+                    ichange = 1;
+                    for (int nn2 = 0; nn2 < k; ++nn2) {
+                        for (int nn1 = 0; nn1 < n; ++nn1) {
+                            xbest[nn2][nn1] = xtry[nn2][nn1];
+                        }
+                    }
+                    x[ind][location1] = xtry[ind][location1];
+                    x[ind][location2] = xtry[ind][location2];
+                    critbest = crittry;
+                    ipert = 1;
+                    xcrit = crittry;
+                } else {
+                    ipert++;
+                    if (crittry < xcrit) {
+                        x[ind][location1] = xtry[ind][location1];
+                        x[ind][location2] = xtry[ind][location2];
+                        ichange = 1;
+                        xcrit = crittry;
+                    } else {
+                        double delta1 = crittry - xcrit;
+                        double prob = exp(-delta1 * pow(temp, -1));
+                        std::uniform_real_distribution<> dis_prob(0, 1);
+                        double q = dis_prob(gen);
+                        if (prob >= q) {
+                            x[ind][location1] = xtry[ind][location1];
+                            x[ind][location2] = xtry[ind][location2];
+                            xcrit = crittry;
+                        } else {
+                            xtry[ind][location1] = x[ind][location1];
+                            xtry[ind][location2] = x[ind][location2];
+                            revert_distmatrix(n, location1, location2, d, d_old);
+                            *avgdist_cur = *avgdist_old;
+                            int nslice1 = location1 / m;
+                            int nslice2 = location2 / m;
+                            avgdist_slice[nslice1] = avgdist_slice_old[nslice1];
+                            avgdist_slice[nslice2] = avgdist_slice_old[nslice2];
+                        }
+                    }
+                }
+            }
+            temp *= tfac;
+        }
+
+        for (int i = 0; i < k; ++i) {
+            delete[] lmatrix[i];
+        }
+        delete[] lmatrix;
+        delete[] loc;
+    }
+
+    // 转换为 std::vector<std::vector<int>> 并返回
+    std::vector<std::vector<int>> result(n, std::vector<int>(k));
+    for (int ii = 0; ii < n; ++ii) {
+        for (int jj = 0; jj < k; ++jj) {
+            result[ii][jj] = xbest[jj][ii];
+        }
+    }
+
+    *measure = critbest;
+    *Total_Iter = itotal + itotal2;
+
+    // 清理内存
+    for (int i = 0; i < k; ++i) {
+        delete[] xbest[i];
+        delete[] xtry[i];
+        delete[] x[i];
+    }
+    delete[] xbest;
+    delete[] xtry;
+    delete[] x;
+    delete[] d;
+    delete[] d_old;
+    delete[] avgdist_slice;
+    delete[] avgdist_slice_old;
+    delete avgdist_cur;
+    delete avgdist_old;
+
+    return result;
+}
+
+// 测试主函数
+int main() {
+    int mRow = 100;       // 每片运行数
+    int Col = 100;        // 因子数
+    int nslice = 1;     // 片数
+    int npower = 15;     // L_p幂次
+    int nstarts = 1;    // 随机起始次数
+    int IterMax = 1;  // 每次温度下最大尝试次数
+    int Total_Iter = 500; // 总迭代次数
+    int p = 1;
+    double measure;
+    double temp0 = 1;
+
+    auto start = std::chrono::high_resolution_clock::now();
+    std::vector<std::vector<int>> design = maximinSLHD(&mRow, &Col, &nslice, &npower, &nstarts, &IterMax, &Total_Iter, &measure, &temp0);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> duration = end - start;
+
+    std::cout << "Optimized design matrix:" << std::endl;
+    for (const auto& row : design) {
+        for (int val : row) {
+            std::cout << val << " ";
+        }
+        std::cout << std::endl;
+    }
+    std::cout << "Execution time: " << duration.count() << " ms" << std::endl;
+    std::cout << "Measure (critbest): " << measure << std::endl;
+    std::cout << "Initial temperature (temp0): " << temp0 << std::endl;
+    std::cout << "Total iterations (itotal + itotal2): " << Total_Iter << std::endl;
+    std::cout << "L_2 value (p=" << p << "): " << L_2(design, p) << std::endl;
+    return 0;
+}
+
+
+
