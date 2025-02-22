@@ -94,23 +94,6 @@ std::vector<std::vector<int>> level_leave_one_out_com(const std::vector<std::vec
     return D1;
 }
 
-std::vector<std::vector<int>> construction(int SetN) {
-    std::vector<int> aa = Euler(SetN); // aa的大小为φ(SetN)
-    std::vector<std::vector<int>> D = GLP(SetN, aa); // D为SetN × φ(SetN)
-    int ncol = aa.size(); // D的列数
-    // D1的列数变为SetN × ncol
-    std::vector<std::vector<int>> D1(SetN, std::vector<int>(SetN * ncol, 0));
-    
-    for (int j = 0; j < SetN; ++j) {
-        std::vector<std::vector<int>> leveled = level(D, j); // leveled为SetN × ncol
-        for (int i = 0; i < SetN; ++i) {
-            for (int k = 0; k < ncol; ++k) {
-                D1[i][j * ncol + k] = leveled[i][k]; // 取全部列
-            }
-        }
-    }
-    return D1;
-}
 // L_2
 double L_2(const std::vector<std::vector<int>>& D, int p) {
     int N = D.size();
@@ -141,4 +124,93 @@ double L_2(const std::vector<std::vector<int>>& D, int p) {
         }
     }
     return min_val;
+}
+
+// SA_leave_one_out_half_naive 函数
+std::vector<std::vector<int>> SA_leave_one_out_half_naive(int N, int S, double T, int p, int total, double r) {
+    // 生成 com = 1:((N+1)/2)-1
+    std::vector<int> com((N + 1) / 2 - 1);
+    for (int i = 0; i < com.size(); ++i) {
+        com[i] = i; // 0-based 索引，从 0 到 (N+1)/2-2
+    }
+
+    // 生成 D
+    std::vector<std::vector<int>> D = level_leave_one_out_com(GLP(N, Euler(N)), com);
+    int n_rows = D.size();
+    int n_cols = D[0].size();
+
+    // 随机数生成器
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    // 随机选择初始 column_optimal
+    std::vector<int> indices(n_cols);
+    for (int i = 0; i < n_cols; ++i) indices[i] = i;
+    std::shuffle(indices.begin(), indices.end(), gen);
+    std::vector<int> column_optimal(S);
+    for (int i = 0; i < S; ++i) column_optimal[i] = indices[i];
+
+    // 计算初始 value_optimal
+    std::vector<std::vector<int>> D_optimal(n_rows, std::vector<int>(S));
+    for (int i = 0; i < n_rows; ++i) {
+        for (int j = 0; j < S; ++j) {
+            D_optimal[i][j] = D[i][column_optimal[j]];
+        }
+    }
+    double value_optimal = L_2(D_optimal, p) / std::floor(std::pow((N - 1) / 2.0, p - 1) * N * S / 3.0);
+
+    // 模拟退火迭代
+    for (int i = 0; i < total; ++i) {
+        // 获取剩余列
+        std::vector<int> remaining_cols;
+        for (int col = 0; col < n_cols; ++col) {
+            if (std::find(column_optimal.begin(), column_optimal.end(), col) == column_optimal.end()) {
+                remaining_cols.push_back(col);
+            }
+        }
+
+        // 随机选择一个剩余列
+        std::uniform_int_distribution<> dis_remain(0, remaining_cols.size() - 1);
+        int try_column = remaining_cols[dis_remain(gen)];
+
+        // 随机替换 column_optimal 中的一列
+        std::vector<int> column_try = column_optimal;
+        std::uniform_int_distribution<> dis_optimal(0, S - 1);
+        int replace_idx = dis_optimal(gen);
+        column_try[replace_idx] = try_column;
+
+        // 计算 value_try
+        std::vector<std::vector<int>> D_try(n_rows, std::vector<int>(S));
+        for (int r = 0; r < n_rows; ++r) {
+            for (int c = 0; c < S; ++c) {
+                D_try[r][c] = D[r][column_try[c]];
+            }
+        }
+        double value_try = L_2(D_try, p) / std::floor(std::pow((N - 1) / 2.0, p - 1) * N * S / 3.0);
+
+        // 模拟退火决策
+        if (value_try > value_optimal) {
+            column_optimal = column_try;
+            value_optimal = value_try;
+        } else {
+            std::uniform_real_distribution<> dis_prob(0, 1);
+            double prob = std::exp((value_try - value_optimal) / T);
+            if (prob > dis_prob(gen)) {
+                column_optimal = column_try;
+                value_optimal = value_try;
+            }
+        }
+
+        // 更新温度
+        T *= r;
+    }
+
+    // 返回优化后的子矩阵
+    std::vector<std::vector<int>> result(n_rows, std::vector<int>(S));
+    for (int i = 0; i < n_rows; ++i) {
+        for (int j = 0; j < S; ++j) {
+            result[i][j] = D[i][column_optimal[j]];
+        }
+    }
+    return result;
 }
